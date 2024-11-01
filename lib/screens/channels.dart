@@ -32,6 +32,16 @@ class _ChannelScreenState extends State<ChannelScreen> {
     });
   }
 
+  void navigateToChannelDetail(String channel) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ChannelDetailScreen(channelName: channel),
+      ),
+    );
+  }
+
+// channel list
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -42,13 +52,38 @@ class _ChannelScreenState extends State<ChannelScreen> {
         itemCount: channels.length,
         itemBuilder: (context, index) {
           return ListTile(
-            title: Text(channels[index]),
+            title: Text(
+              channels[index],
+            style: TextStyle(fontSize: 25)),
+            onTap: () => navigateToChannelDetail(channels[index]),
           );
         },
       ),
       bottomNavigationBar: BottomNavBar(
         onTap: _onNavBarTap,
         currentIndex: _currentIndex,
+      ),
+    );
+  }
+}
+
+// selected channel
+class ChannelDetailScreen extends StatelessWidget {
+  final String channelName;
+
+  const ChannelDetailScreen({super.key, required this.channelName});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(channelName),
+      ),
+      body: Center(
+        child: Text(
+          '$channelName!',
+          style: TextStyle(fontSize: 25),
+        ),
       ),
     );
   }
