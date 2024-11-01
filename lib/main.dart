@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:mobile_app_group5/screens/auth.dart';
 import 'package:mobile_app_group5/screens/splash.dart';
+import 'package:mobile_app_group5/screens/channels.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,16 +30,16 @@ class App extends StatelessWidget {
       home: StreamBuilder(stream: FirebaseAuth.instance.authStateChanges(), builder: (context, snapshot) {
         //Checks if firebase is waiting on data and shows a loading screen instead of placeholder
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const SplashScreen();
+          return const ChannelScreen();
         }
         
         //If there is userdata already stored on the device, the app will take you past the login screen
         if (snapshot.hasData) {
-          return const AuthScreen(); //Må endres til "main skjerm" typ
+          return const ChannelScreen(); //Må endres til "main skjerm" typ
         }
 
         //If no userdata is stored it will take you to login screen
-        return const AuthScreen();
+        return const ChannelScreen();
       } ,),
     );
   }
