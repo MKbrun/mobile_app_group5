@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:mobile_app_group5/screens/splash.dart';
 import 'package:mobile_app_group5/widgets/profile_image_picker.dart';
 
 final _firebase = FirebaseAuth.instance;
@@ -68,6 +69,11 @@ class _AuthScreenState extends State<AuthScreen> {
           'image_url': imageURL,
         });
       }
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const SplashScreen()),
+      );
     } on FirebaseAuthException catch (error) {
       ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
@@ -91,6 +97,10 @@ class _AuthScreenState extends State<AuthScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
+                decoration: BoxDecoration(
+                  borderRadius:
+                      BorderRadius.circular(20.0), // Adjust for round edges
+                ),
                 margin: EdgeInsets.only(
                   top: 30,
                   bottom: 20,
@@ -98,7 +108,10 @@ class _AuthScreenState extends State<AuthScreen> {
                   right: 20,
                 ),
                 width: 200,
-                child: Image.asset('assets/images/chat_initial.jpg'),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20.0),
+                  child: Image.asset('assets/images/Workchat.png'),
+                ),
               ),
               Card(
                 margin: const EdgeInsets.all(20),
