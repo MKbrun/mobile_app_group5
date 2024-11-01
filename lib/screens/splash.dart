@@ -1,8 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_app_group5/widgets/bottom_nav_bar.dart';
 
 //Screen to show the app is loading
-class SplashScreen extends StatelessWidget {
+class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
+
+@override
+  State<StatefulWidget> createState() {
+    return _SplashScreenState();
+  }
+}
+
+
+class _SplashScreenState extends State<SplashScreen> {
+  int _currentIndex = 0;
+
+  void _onNavBarTap (int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,6 +44,10 @@ class SplashScreen extends StatelessWidget {
             ),
           ],
         ),
+      ),
+      bottomNavigationBar: BottomNavBar(
+        onTap: _onNavBarTap,
+        currentIndex: _currentIndex,
       ),
     );
   }
