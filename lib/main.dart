@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mobile_app_group5/screens/calendar_screen.dart';
 
 import 'package:mobile_app_group5/screens/channels.dart';
+import 'package:mobile_app_group5/screens/home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,11 +37,11 @@ class App extends StatelessWidget {
 
           //If there is userdata already stored on the device, the app will take you past the login screen
           if (snapshot.hasData) {
-            return const CalendarScreen(); //Må endres til "main skjerm" typ
+            return const HomeScreen(); //Må endres til "main skjerm" typ
           }
 
           //If no userdata is stored it will take you to login screen
-          return const CalendarScreen();
+          return const HomeScreen();
         },
       ),
     );

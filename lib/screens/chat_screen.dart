@@ -1,8 +1,12 @@
+// chat_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_chat_ui/flutter_chat_ui.dart';
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:mobile_app_group5/widgets/bottom_nav_bar.dart'; // Import BottomNavBar
+import 'package:mobile_app_group5/screens/channels.dart';
+import 'package:mobile_app_group5/screens/calendar_screen.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -15,6 +19,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _controller = TextEditingController();
   final List<types.Message> _messages = [];
   final _user = types.User(id: 'user-id', firstName: 'Demo User');
+  int _currentIndex = 0; // Track current bottom nav index
 
   void _sendMessage() {
     if (_controller.text.isEmpty) return;
@@ -39,12 +44,12 @@ class _ChatScreenState extends State<ChatScreen> {
 
     if (image != null) {
       final imageMessage = types.ImageMessage(
-      author: _user,
-      createdAt: DateTime.now().millisecondsSinceEpoch,
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      name: image.name,
-      size: File(image.path).lengthSync(),
-      uri: image.path,
+        author: _user,
+        createdAt: DateTime.now().millisecondsSinceEpoch,
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        name: image.name,
+        size: File(image.path).lengthSync(),
+        uri: image.path,
       );
 
       setState(() {
@@ -53,12 +58,29 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  void _onNavBarTap(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+
+    // Handle screen navigation
+    if (index == 1) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const ChannelScreen()),
+      );
+    } else if (index == 2) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const CalendarScreen()),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Chat'),
-      ),
+      appBar: AppBar(title: Text('Chat')),
       body: Column(
         children: [
           Expanded(
@@ -95,6 +117,10 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ),
         ],
+      ),
+      bottomNavigationBar: BottomNavBar(
+        onTap: _onNavBarTap,
+        currentIndex: _currentIndex,
       ),
     );
   }

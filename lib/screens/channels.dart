@@ -1,5 +1,8 @@
+// channels.dart
 import 'package:flutter/material.dart';
 import 'package:mobile_app_group5/widgets/bottom_nav_bar.dart';
+import 'package:mobile_app_group5/screens/chat_screen.dart';
+import 'package:mobile_app_group5/screens/calendar_screen.dart';
 
 class ChannelScreen extends StatefulWidget {
   const ChannelScreen({super.key});
@@ -18,6 +21,18 @@ class _ChannelScreenState extends State<ChannelScreen> {
     setState(() {
       _currentIndex = index;
     });
+
+    if (index == 0) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const ChatScreen()),
+      );
+    } else if (index == 2) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const CalendarScreen()),
+      );
+    }
   }
 
   @override
@@ -45,16 +60,15 @@ class _ChannelScreenState extends State<ChannelScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Channels'),
-      ),
+      appBar: AppBar(title: Text('Channels')),
       body: ListView.builder(
         itemCount: channels.length,
         itemBuilder: (context, index) {
           return ListTile(
             title: Text(
               channels[index],
-            style: TextStyle(fontSize: 25)),
+              style: TextStyle(fontSize: 25),
+            ),
             onTap: () => navigateToChannelDetail(channels[index]),
           );
         },
@@ -67,7 +81,6 @@ class _ChannelScreenState extends State<ChannelScreen> {
   }
 }
 
-// selected channel
 class ChannelDetailScreen extends StatelessWidget {
   final String channelName;
 
@@ -76,9 +89,7 @@ class ChannelDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(channelName),
-      ),
+      appBar: AppBar(title: Text(channelName)),
       body: Center(
         child: Text(
           '$channelName!',
