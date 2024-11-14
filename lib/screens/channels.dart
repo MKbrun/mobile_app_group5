@@ -60,14 +60,14 @@ class _ChannelScreenState extends State<ChannelScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Channels')),
+      appBar: AppBar(title: const Text('Channels')),
       body: ListView.builder(
         itemCount: channels.length,
         itemBuilder: (context, index) {
           return ListTile(
             title: Text(
               channels[index],
-              style: TextStyle(fontSize: 25),
+              style: const TextStyle(fontSize: 25),
             ),
             onTap: () => navigateToChannelDetail(channels[index]),
           );
@@ -93,7 +93,7 @@ class ChannelDetailScreen extends StatelessWidget {
       body: Center(
         child: Text(
           '$channelName!',
-          style: TextStyle(fontSize: 25),
+          style: const TextStyle(fontSize: 25),
         ),
       ),
     );

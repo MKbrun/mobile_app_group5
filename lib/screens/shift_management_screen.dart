@@ -1,6 +1,7 @@
 // shift_management_screen.dart
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:mobile_app_group5/themes/app_theme.dart';
 
 class ShiftManagementScreen extends StatefulWidget {
   final DateTime selectedDate;
@@ -60,9 +61,14 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
                   decoration: InputDecoration(
                     labelText: "Date",
                     hintText: "mm/dd/yyyy",
-                    prefixIcon: Icon(Icons.calendar_today),
+                    prefixIcon: const Icon(Icons.calendar_today),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10.0),
+                      borderSide: BorderSide(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .secondary, // Use theme color
+                      ),
                     ),
                   ),
                   controller: TextEditingController(
@@ -83,7 +89,7 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
                   child: ListTile(
                     title: Text(
                       shift["time"],
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     subtitle: Text("Assigned to: ${shift["user"]}"),
                     trailing: shift["available"]
@@ -91,13 +97,16 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
                             onPressed: () {
                               // Dummy action for "Take Shift"
                             },
-                            child: Text("Take Shift"),
+                            style: AppTheme
+                                .lightGreenButtonStyle, // Light green button
+                            child: const Text("Take Shift"),
                           )
-                        : TextButton(
+                        : ElevatedButton(
                             onPressed: () {
                               // Dummy action for "Trade Shift"
                             },
-                            child: Text("Trade Shift"),
+                            child: const Text(
+                                "Trade Shift"), // Blue button by default
                           ),
                   ),
                 );

@@ -4,7 +4,7 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:mobile_app_group5/widgets/bottom_nav_bar.dart';
 import 'package:mobile_app_group5/screens/chat_screen.dart';
 import 'package:mobile_app_group5/screens/channels.dart';
-import 'package:mobile_app_group5/screens/shift_management_screen.dart';
+import 'package:mobile_app_group5/screens/shift_management_screen.dart'; // Import the new screen
 
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
@@ -64,7 +64,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
           ),
           calendarStyle: CalendarStyle(
             todayDecoration: BoxDecoration(
-              color: Colors.blue,
+              color:
+                  Theme.of(context).colorScheme.secondary, // Using theme color
               shape: BoxShape.circle,
             ),
             todayTextStyle: TextStyle(color: Colors.white),

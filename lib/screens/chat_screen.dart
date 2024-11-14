@@ -4,7 +4,7 @@ import 'package:flutter_chat_ui/flutter_chat_ui.dart';
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-import 'package:mobile_app_group5/widgets/bottom_nav_bar.dart'; // Import BottomNavBar
+import 'package:mobile_app_group5/widgets/bottom_nav_bar.dart';
 import 'package:mobile_app_group5/screens/channels.dart';
 import 'package:mobile_app_group5/screens/calendar_screen.dart';
 
@@ -80,7 +80,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Chat')),
+      appBar: AppBar(title: const Text('Chat')),
       body: Column(
         children: [
           Expanded(
@@ -96,7 +96,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 child: Row(
                   children: [
                     IconButton(
-                      icon: Icon(Icons.photo),
+                      icon: const Icon(Icons.photo),
                       onPressed: _pickImage,
                     ),
                     Expanded(
@@ -104,11 +104,19 @@ class _ChatScreenState extends State<ChatScreen> {
                         controller: _controller,
                         decoration: InputDecoration(
                           hintText: 'Type a message',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .secondary, // Use theme color
+                            ),
+                          ),
                         ),
                       ),
                     ),
                     IconButton(
-                      icon: Icon(Icons.send),
+                      icon: const Icon(Icons.send),
                       onPressed: _sendMessage,
                     ),
                   ],

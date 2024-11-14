@@ -1,11 +1,12 @@
+// main.dart
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:mobile_app_group5/firebase_options.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mobile_app_group5/screens/calendar_screen.dart';
-
 import 'package:mobile_app_group5/screens/channels.dart';
 import 'package:mobile_app_group5/screens/home_screen.dart';
+import 'package:mobile_app_group5/themes/app_theme.dart'; // Import the theme
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,25 +24,22 @@ class App extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'FlutterChat',
-      theme: ThemeData().copyWith(
-        colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color.fromARGB(255, 13, 61, 94)),
-      ),
+      theme: AppTheme.lightTheme, // Apply the theme from the theme file
       home: StreamBuilder(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
-          //Checks if firebase is waiting on data and shows a loading screen instead of placeholder
+          // Show loading screen if waiting for data
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const ChannelScreen();
+            return const CircularProgressIndicator();
           }
 
-          //If there is userdata already stored on the device, the app will take you past the login screen
+          // If user data exists, show home screen
           if (snapshot.hasData) {
-            return const HomeScreen(); //Må endres til "main skjerm" typ
+            return const HomeScreen();
           }
 
-          //If no userdata is stored it will take you to login screen
-          return const HomeScreen();
+          // Otherwise, show login screen
+          return const HomeScreen(); // Update as needed for your login screen
         },
       ),
     );

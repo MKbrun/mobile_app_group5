@@ -1,3 +1,4 @@
+// home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:mobile_app_group5/screens/channels.dart';
 
@@ -8,27 +9,25 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Home'),
+        title: const Text('Home'),
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircleAvatar(
+            const CircleAvatar(
               radius: 50,
               backgroundColor: Colors.grey,
-              // Dummy image
               child: Icon(Icons.person, size: 50),
             ),
-            SizedBox(height: 20),
-            Text(
-              'User Name', // Dummy avatar
+            const SizedBox(height: 20),
+            const Text(
+              'User Name',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 40),
+            const SizedBox(height: 40),
             ElevatedButton(
               onPressed: () {
-                // Dummy nav to ChannelScreen
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -36,11 +35,13 @@ class HomeScreen extends StatelessWidget {
                 );
               },
               style: ElevatedButton.styleFrom(
-                shape: CircleBorder(),
-                padding: EdgeInsets.all(30),
-                backgroundColor: Theme.of(context).colorScheme.primary,
+                backgroundColor:
+                    Theme.of(context).colorScheme.secondary, // Use theme color
+                shape: const CircleBorder(),
+                padding: const EdgeInsets.all(30),
               ),
-              child: Icon(Icons.arrow_forward, size: 30),
+              child: const Icon(Icons.arrow_forward,
+                  size: 30, color: Colors.white),
             ),
           ],
         ),

@@ -5,17 +5,16 @@ import 'package:mobile_app_group5/widgets/bottom_nav_bar.dart';
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
-@override
+  @override
   State<StatefulWidget> createState() {
     return _SplashScreenState();
   }
 }
 
-
 class _SplashScreenState extends State<SplashScreen> {
   int _currentIndex = 0;
 
-  void _onNavBarTap (int index) {
+  void _onNavBarTap(int index) {
     setState(() {
       _currentIndex = index;
     });
