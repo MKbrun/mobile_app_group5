@@ -1,7 +1,7 @@
 // channels.dart
 import 'package:flutter/material.dart';
 import 'package:mobile_app_group5/widgets/bottom_nav_bar.dart';
-import 'package:mobile_app_group5/screens/chat_screen.dart';
+import 'package:mobile_app_group5/screens/contacts_screen.dart';
 import 'package:mobile_app_group5/screens/calendar_screen.dart';
 
 class ChannelScreen extends StatefulWidget {
@@ -25,7 +25,7 @@ class _ChannelScreenState extends State<ChannelScreen> {
     if (index == 0) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const ChatScreen()),
+        MaterialPageRoute(builder: (context) => const ContactsScreen()),
       );
     } else if (index == 2) {
       Navigator.pushReplacement(

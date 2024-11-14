@@ -9,7 +9,9 @@ import 'package:mobile_app_group5/screens/channels.dart';
 import 'package:mobile_app_group5/screens/calendar_screen.dart';
 
 class ChatScreen extends StatefulWidget {
-  const ChatScreen({super.key});
+  final String userName;
+
+  const ChatScreen({super.key, required this.userName});
 
   @override
   _ChatScreenState createState() => _ChatScreenState();
@@ -80,7 +82,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Chat')),
+      appBar: AppBar(title: Text('Chat ${widget.userName}')),
       body: Column(
         children: [
           Expanded(
