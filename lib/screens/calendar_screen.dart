@@ -4,6 +4,7 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:mobile_app_group5/widgets/bottom_nav_bar.dart';
 import 'package:mobile_app_group5/screens/chat_screen.dart';
 import 'package:mobile_app_group5/screens/channels.dart';
+import 'package:mobile_app_group5/screens/shift_management_screen.dart';
 
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
@@ -33,6 +34,15 @@ class _CalendarScreenState extends State<CalendarScreen> {
     }
   }
 
+  void _onDateSelected(DateTime date) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ShiftManagementScreen(selectedDate: date),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -45,6 +55,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
           lastDay: DateTime.utc(2025, 12, 31),
           currentDay: DateTime.now(),
           calendarFormat: CalendarFormat.month,
+          onDaySelected: (selectedDay, focusedDay) {
+            _onDateSelected(selectedDay);
+          },
           headerStyle: const HeaderStyle(
             formatButtonVisible: false,
             titleCentered: true,
