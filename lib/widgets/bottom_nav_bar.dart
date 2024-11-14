@@ -1,4 +1,6 @@
+// bottom_nav_bar.dart
 import 'package:flutter/material.dart';
+import 'package:mobile_app_group5/themes/app_theme.dart';
 
 class BottomNavBar extends StatelessWidget {
   final Function(int) onTap;
@@ -11,31 +13,95 @@ class BottomNavBar extends StatelessWidget {
   });
 
   @override
-Widget build(BuildContext context) {
-  return SizedBox(
-    height: kBottomNavigationBarHeight * 1.5,
-    child: BottomNavigationBar(
-      currentIndex: currentIndex,
-      onTap: onTap,
-      items: [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.chat_bubble_outline),
-          label: 'Private Chat',
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.white,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _buildNavItem(
+            context,
+            icon: Icons.chat_bubble_outline,
+            label: 'Private Chat',
+            index: 0,
+          ),
+          _divider(),
+          _buildNavItem(
+            context,
+            icon: Icons.layers_outlined,
+            label: 'Servers',
+            index: 1,
+          ),
+          _divider(),
+          _buildNavItem(
+            context,
+            icon: Icons.calendar_today_outlined,
+            label: 'Calendar',
+            index: 2,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNavItem(BuildContext context,
+      {required IconData icon, required String label, required int index}) {
+    final bool isSelected = currentIndex == index;
+
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => onTap(index),
+        child: Container(
+          decoration: BoxDecoration(
+            color: isSelected
+                ? const Color.fromARGB(
+                    255, 60, 95, 128) // Darker blue for selected
+                : AppTheme.blueColor,
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      offset: const Offset(0, 4),
+                      blurRadius: 6,
+                    ),
+                  ]
+                : [],
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                color: isSelected
+                    ? Colors.white
+                        .withOpacity(0.85) // Slightly darker white for selected
+                    : Colors.white,
+                size: 24,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  color: isSelected
+                      ? Colors.white.withOpacity(
+                          0.85) // Slightly darker white for selected
+                      : Colors.white,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
         ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.layers_outlined),
-          label: 'Servers',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.calendar_today_outlined),
-          label: 'Calendar',
-        ),
-      ],
-      selectedItemColor: Theme.of(context).colorScheme.primary,
-      unselectedItemColor: Colors.grey,
-      showSelectedLabels: true,
-      showUnselectedLabels: true,
-    ),
-  );
-}
+      ),
+    );
+  }
+
+  Widget _divider() {
+    return Container(
+      width: 1,
+      height: 40,
+      color: Colors.white, // Divider color
+    );
+  }
 }
