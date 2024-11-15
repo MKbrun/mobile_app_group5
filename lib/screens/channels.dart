@@ -56,28 +56,36 @@ class _ChannelScreenState extends State<ChannelScreen> {
     );
   }
 
-// channel list
+  // channel list
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Channels')),
-      body: ListView.builder(
-        itemCount: channels.length,
-        itemBuilder: (context, index) {
-          return ListTile(
-            title: Text(
-              channels[index],
-              style: const TextStyle(fontSize: 25),
-            ),
-            onTap: () => navigateToChannelDetail(channels[index]),
-          );
-        },
-      ),
-      bottomNavigationBar: BottomNavBar(
-        onTap: _onNavBarTap,
-        currentIndex: _currentIndex,
-      ),
-    );
+  return Scaffold(
+    appBar: AppBar(
+      title: const Text('Channels'),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.add),
+          onPressed: () {}, // TODO: functionality
+        ),
+      ],
+    ),
+    body: ListView.builder(
+      itemCount: channels.length,
+      itemBuilder: (context, index) {
+        return ListTile(
+          title: Text(
+            channels[index],
+            style: const TextStyle(fontSize: 25),
+          ),
+          onTap: () => navigateToChannelDetail(channels[index]),
+        );
+      },
+    ),
+    bottomNavigationBar: BottomNavBar(
+      onTap: _onNavBarTap,
+      currentIndex: _currentIndex,
+    ),
+  );
   }
 }
 
