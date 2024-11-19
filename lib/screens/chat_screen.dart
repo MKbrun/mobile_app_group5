@@ -4,9 +4,6 @@ import 'package:flutter_chat_ui/flutter_chat_ui.dart';
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-import 'package:mobile_app_group5/widgets/bottom_nav_bar.dart';
-import 'package:mobile_app_group5/screens/channels.dart';
-import 'package:mobile_app_group5/screens/calendar_screen.dart';
 
 class ChatScreen extends StatefulWidget {
   final String userName;
@@ -21,7 +18,6 @@ class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _controller = TextEditingController();
   final List<types.Message> _messages = [];
   final _user = types.User(id: 'user-id', firstName: 'Demo User');
-  int _currentIndex = 0; // Track current bottom nav index
 
   void _sendMessage() {
     if (_controller.text.isEmpty) return;
@@ -40,7 +36,7 @@ class _ChatScreenState extends State<ChatScreen> {
     _controller.clear();
   }
 
-  Future _pickImage() async {
+  Future<void> _pickImage() async {
     final picker = ImagePicker();
     final image = await picker.pickImage(source: ImageSource.gallery);
 
@@ -57,25 +53,6 @@ class _ChatScreenState extends State<ChatScreen> {
       setState(() {
         _messages.insert(0, imageMessage);
       });
-    }
-  }
-
-  void _onNavBarTap(int index) {
-    setState(() {
-      _currentIndex = index;
-    });
-
-    // Handle screen navigation
-    if (index == 1) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const ChannelScreen()),
-      );
-    } else if (index == 2) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const CalendarScreen()),
-      );
     }
   }
 
@@ -127,10 +104,6 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ),
         ],
-      ),
-      bottomNavigationBar: BottomNavBar(
-        onTap: _onNavBarTap,
-        currentIndex: _currentIndex,
       ),
     );
   }

@@ -3,9 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:mobile_app_group5/firebase_options.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:mobile_app_group5/screens/calendar_screen.dart';
-import 'package:mobile_app_group5/screens/channels.dart';
-import 'package:mobile_app_group5/screens/home_screen.dart';
+import 'package:mobile_app_group5/screens/primaryNavigationScreen.dart';
 import 'package:mobile_app_group5/themes/app_theme.dart'; // Import the theme
 
 void main() async {
@@ -25,21 +23,23 @@ class App extends StatelessWidget {
     return MaterialApp(
       title: 'FlutterChat',
       theme: AppTheme.lightTheme, // Apply the theme from the theme file
-      home: StreamBuilder(
+      home: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
           // Show loading screen if waiting for data
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const CircularProgressIndicator();
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
           }
 
           // If user data exists, show home screen
           if (snapshot.hasData) {
-            return const HomeScreen();
+            return const PrimaryNavigationScreen();
           }
 
           // Otherwise, show login screen
-          return const HomeScreen(); // Update as needed for your login screen
+          return const PrimaryNavigationScreen(); // Replace with LoginScreen if available
         },
       ),
     );

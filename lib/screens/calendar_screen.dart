@@ -1,40 +1,12 @@
 // calendar_screen.dart
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:mobile_app_group5/widgets/bottom_nav_bar.dart';
-import 'package:mobile_app_group5/screens/contacts_screen.dart';
-import 'package:mobile_app_group5/screens/channels.dart';
 import 'package:mobile_app_group5/screens/shift_management_screen.dart'; // Import the new screen
 
-class CalendarScreen extends StatefulWidget {
+class CalendarScreen extends StatelessWidget {
   const CalendarScreen({super.key});
 
-  @override
-  _CalendarScreenState createState() => _CalendarScreenState();
-}
-
-class _CalendarScreenState extends State<CalendarScreen> {
-  int _currentIndex = 2; // Track current tab index
-
-  void _onNavBarTap(int index) {
-    setState(() {
-      _currentIndex = index;
-    });
-
-    if (index == 0) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const ContactsScreen()),
-      );
-    } else if (index == 1) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const ChannelScreen()),
-      );
-    }
-  }
-
-  void _onDateSelected(DateTime date) {
+  void _onDateSelected(BuildContext context, DateTime date) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -56,7 +28,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
           currentDay: DateTime.now(),
           calendarFormat: CalendarFormat.month,
           onDaySelected: (selectedDay, focusedDay) {
-            _onDateSelected(selectedDay);
+            _onDateSelected(context, selectedDay);
           },
           headerStyle: const HeaderStyle(
             formatButtonVisible: false,
@@ -68,13 +40,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   Theme.of(context).colorScheme.secondary, // Using theme color
               shape: BoxShape.circle,
             ),
-            todayTextStyle: TextStyle(color: Colors.white),
+            todayTextStyle: const TextStyle(color: Colors.white),
           ),
         ),
-      ),
-      bottomNavigationBar: BottomNavBar(
-        onTap: _onNavBarTap,
-        currentIndex: _currentIndex,
       ),
     );
   }
