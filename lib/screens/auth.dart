@@ -60,6 +60,9 @@ class _AuthScreenState extends State<AuthScreen> {
         final imageURL = await storageRef
             .getDownloadURL(); //Gets the URL of the image for later use in the app
 
+        // Assign role based on email address while testing/develop
+        String role = _enteredEmail.contains('admin') ? 'admin' : 'user';
+
         FirebaseFirestore.instance
             .collection('users')
             .doc(userCredentials.user!.uid)
@@ -67,6 +70,7 @@ class _AuthScreenState extends State<AuthScreen> {
           'username': _enteredUsername,
           'email': _enteredEmail,
           'image_url': imageURL,
+          'role': role, // Assign role
         });
       }
 

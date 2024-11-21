@@ -1,6 +1,6 @@
 // home_screen.dart
 import 'package:flutter/material.dart';
-import 'package:mobile_app_group5/screens/channels.dart';
+import 'package:mobile_app_group5/screens/primaryNavigationScreen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -31,7 +31,7 @@ class HomeScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => const ChannelScreen()),
+                      builder: (context) => const PrimaryNavigationScreen()),
                 );
               },
               style: ElevatedButton.styleFrom(
