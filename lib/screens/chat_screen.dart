@@ -1,14 +1,16 @@
-// chat_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_chat_ui/flutter_chat_ui.dart';
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 
 class ChatScreen extends StatefulWidget {
   final String userName;
+  final String userId;
 
-  const ChatScreen({super.key, required this.userName});
+  const ChatScreen({super.key, required this.userName, required this.userId});
 
   @override
   _ChatScreenState createState() => _ChatScreenState();
@@ -16,24 +18,82 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _controller = TextEditingController();
+  final _currentUser = FirebaseAuth.instance.currentUser!;
   final List<types.Message> _messages = [];
-  final _user = types.User(id: 'user-id', firstName: 'Demo User');
+  String chatId = '';
 
-  void _sendMessage() {
-    if (_controller.text.isEmpty) return;
+  @override
+  void initState() {
+    super.initState();
+    _initializeChat();
+  }
 
-    final textMessage = types.TextMessage(
-      author: _user,
-      createdAt: DateTime.now().millisecondsSinceEpoch,
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      text: _controller.text,
-    );
+  void _initializeChat() {
 
-    setState(() {
-      _messages.insert(0, textMessage);
+    chatId = _currentUser.uid.compareTo(widget.userId) < 0
+        ? '${_currentUser.uid}_${widget.userId}'
+        : '${widget.userId}_${_currentUser.uid}';
+
+    
+    FirebaseFirestore.instance
+        .collection('private_chat_messages')
+        .where('chatId', isEqualTo: chatId)
+        .orderBy('timestamp')
+        .snapshots()
+        .listen((snapshot) {
+      final messages = snapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+
+        if (data['type'] == 'text') {
+          return types.TextMessage(
+            author: types.User(id: data['senderId']),
+            createdAt: (data['timestamp'] as Timestamp).millisecondsSinceEpoch,
+            id: doc.id,
+            text: data['text'],
+          );
+        } else if (data['type'] == 'image') {
+          return types.ImageMessage(
+            author: types.User(id: data['senderId']),
+            createdAt: (data['timestamp'] as Timestamp).millisecondsSinceEpoch,
+            id: doc.id,
+            name: data['name'],
+            size: data['size'],
+            uri: data['uri'],
+          );
+        } else {
+          return null;
+        }
+      }).whereType<types.Message>().toList();
+
+      setState(() {
+        _messages.clear();
+        _messages.addAll(messages.reversed);
+      });
     });
+  }
 
-    _controller.clear();
+  Future<void> _sendMessage(String text) async {
+    if (text.isEmpty) return;
+
+    final message = {
+      'chatId': chatId,
+      'senderId': _currentUser.uid,
+      'text': text,
+      'type': 'text',
+      'timestamp': FieldValue.serverTimestamp(),
+    };
+
+    await FirebaseFirestore.instance.collection('private_chat_messages').add(message);
+
+    
+    await FirebaseFirestore.instance.collection('private_chats').doc(chatId).set({
+      'UserIds': [_currentUser.uid, widget.userId],
+      'lastMessage': {
+        'senderId': _currentUser.uid,
+        'text': text,
+        'timestamp': FieldValue.serverTimestamp(),
+      },
+    }, SetOptions(merge: true));
   }
 
   Future<void> _pickImage() async {
@@ -41,35 +101,46 @@ class _ChatScreenState extends State<ChatScreen> {
     final image = await picker.pickImage(source: ImageSource.gallery);
 
     if (image != null) {
-      final imageMessage = types.ImageMessage(
-        author: _user,
-        createdAt: DateTime.now().millisecondsSinceEpoch,
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        name: image.name,
-        size: File(image.path).lengthSync(),
-        uri: image.path,
-      );
+      final file = File(image.path);
+      final fileSize = file.lengthSync();
 
-      setState(() {
-        _messages.insert(0, imageMessage);
-      });
+      final message = {
+        'chatId': chatId,
+        'senderId': _currentUser.uid,
+        'type': 'image',
+        'name': image.name,
+        'size': fileSize,
+        'uri': image.path,
+        'timestamp': FieldValue.serverTimestamp(),
+      };
+
+      await FirebaseFirestore.instance.collection('private_chat_messages').add(message);
+
+      
+      await FirebaseFirestore.instance.collection('private_chats').doc(chatId).set({
+        'UserIds': [_currentUser.uid, widget.userId],
+        'lastMessage': {
+          'senderId': _currentUser.uid,
+          'text': '[Image]',
+          'timestamp': FieldValue.serverTimestamp(),
+        },
+      }, SetOptions(merge: true));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Chat ${widget.userName}')),
+      appBar: AppBar(title: Text('Chat with ${widget.userName}')),
       body: Column(
         children: [
           Expanded(
             child: Chat(
               messages: _messages,
               onSendPressed: (types.PartialText message) {
-                _controller.text = message.text;
-                _sendMessage();
+                _sendMessage(message.text);
               },
-              user: _user,
+              user: types.User(id: _currentUser.uid),
               customBottomWidget: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Row(
@@ -86,9 +157,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
                             borderSide: BorderSide(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .secondary, // Use theme color
+                              color: Theme.of(context).colorScheme.secondary,
                             ),
                           ),
                         ),
@@ -96,7 +165,10 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
                     IconButton(
                       icon: const Icon(Icons.send),
-                      onPressed: _sendMessage,
+                      onPressed: () {
+                        _sendMessage(_controller.text);
+                        _controller.clear();
+                      },
                     ),
                   ],
                 ),
