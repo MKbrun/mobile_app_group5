@@ -1,39 +1,15 @@
 // channels.dart
 import 'package:flutter/material.dart';
-import 'package:mobile_app_group5/widgets/bottom_nav_bar.dart';
-import 'package:mobile_app_group5/screens/contacts_screen.dart';
-import 'package:mobile_app_group5/screens/calendar_screen.dart';
 
 class ChannelScreen extends StatefulWidget {
   const ChannelScreen({super.key});
 
   @override
-  State<StatefulWidget> createState() {
-    return _ChannelScreenState();
-  }
+  State<ChannelScreen> createState() => _ChannelScreenState();
 }
 
 class _ChannelScreenState extends State<ChannelScreen> {
-  int _currentIndex = 1;
   List<String> channels = [];
-
-  void _onNavBarTap(int index) {
-    setState(() {
-      _currentIndex = index;
-    });
-
-    if (index == 0) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const ContactsScreen()),
-      );
-    } else if (index == 2) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const CalendarScreen()),
-      );
-    }
-  }
 
   @override
   void initState() {
@@ -59,33 +35,21 @@ class _ChannelScreenState extends State<ChannelScreen> {
   // channel list
   @override
   Widget build(BuildContext context) {
-  return Scaffold(
-    appBar: AppBar(
-      title: const Text('Channels'),
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.add),
-          onPressed: () {}, // TODO: functionality
-        ),
-      ],
-    ),
-    body: ListView.builder(
-      itemCount: channels.length,
-      itemBuilder: (context, index) {
-        return ListTile(
-          title: Text(
-            channels[index],
-            style: const TextStyle(fontSize: 25),
-          ),
-          onTap: () => navigateToChannelDetail(channels[index]),
-        );
-      },
-    ),
-    bottomNavigationBar: BottomNavBar(
-      onTap: _onNavBarTap,
-      currentIndex: _currentIndex,
-    ),
-  );
+    return Scaffold(
+      appBar: AppBar(title: const Text('Channels')),
+      body: ListView.builder(
+        itemCount: channels.length,
+        itemBuilder: (context, index) {
+          return ListTile(
+            title: Text(
+              channels[index],
+              style: const TextStyle(fontSize: 25),
+            ),
+            onTap: () => navigateToChannelDetail(channels[index]),
+          );
+        },
+      ),
+    );
   }
 }
 
