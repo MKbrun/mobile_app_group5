@@ -27,11 +27,16 @@ class _ContactsScreenState extends State<ContactsScreen> {
         .where(FieldPath.documentId, isNotEqualTo: userId)
         .snapshots();
 
-    await for (var contactsSnapshot in contactsStream) {
-      final List<Map<String, dynamic>> contacts = [];
-      for (var contactDoc in contactsSnapshot.docs) {
-        final contactId = contactDoc.id;
-        final contactData = contactDoc.data();
+    final privateChatsStream = FirebaseFirestore.instance
+      .collection('private_chats')
+      .snapshots();
+
+    await for (var chatsSnapshot in privateChatsStream) {
+    final List<Map<String, dynamic>> contacts = [];
+    final contactsSnapshot = await contactsStream.first;
+    for (var contactDoc in contactsSnapshot.docs) {
+      final contactId = contactDoc.id;
+      final contactData = contactDoc.data();
 
         final chatId = userId.compareTo(contactId) < 0
             ? '${userId}_$contactId'
