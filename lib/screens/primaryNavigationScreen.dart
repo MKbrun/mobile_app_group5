@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'channels.dart';
+import './channel/channels.dart';
 import 'contacts_screen.dart';
 import 'calendar_screen.dart';
 
