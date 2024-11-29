@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:mobile_app_group5/firebase_options.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:mobile_app_group5/screens/auth.dart';
 import 'package:mobile_app_group5/screens/home_screen.dart';
 import 'package:mobile_app_group5/themes/app_theme.dart'; // Import the theme
 
@@ -35,11 +36,11 @@ class App extends StatelessWidget {
 
           // If user data exists, show home screen
           if (snapshot.hasData) {
-            return const HomeScreen();
+            return const AuthScreen();
           }
 
           // Otherwise, show login screen
-          return const HomeScreen(); // Replace with LoginScreen if available
+          return const AuthScreen(); // Replace with LoginScreen if available
         },
       ),
     );
