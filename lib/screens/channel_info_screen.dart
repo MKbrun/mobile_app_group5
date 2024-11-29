@@ -27,14 +27,14 @@ class _ChannelInfoScreenState extends State<ChannelInfoScreen> {
     {'name': 'E', 'email': 'e@example.com'},
   ];
 
-  final double _inputHeight = 50.0; 
+  final double _inputHeight = 50.0;
   final double _buttonHeight = 40.0;
   final double _buttonWidth = 80.0;
   final double _maxWidth = 600.0;
 
   final InputDecoration _textFieldDecoration = const InputDecoration(
     border: OutlineInputBorder(),
-    hintStyle: TextStyle(fontSize: 16),
+    hintStyle: TextStyle(fontSize: 15),
     contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
   );
 
@@ -63,7 +63,7 @@ class _ChannelInfoScreenState extends State<ChannelInfoScreen> {
     final String email = _emailController.text.trim();
     if (email.isNotEmpty) {
       setState(() {
-        users.add({'name': email.split('@')[0], 'email': email}); 
+        users.add({'name': email.split('@')[0], 'email': email});
         sortUsers();
       });
       _emailController.clear();
@@ -77,10 +77,35 @@ class _ChannelInfoScreenState extends State<ChannelInfoScreen> {
     users.sort((a, b) => a['name']!.compareTo(b['name']!));
   }
 
-  void removeUser(int index) {
-    setState(() {
-      users.removeAt(index);
-    });
+  void confirmRemoveUser(int index) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        final user = users[index];
+        return AlertDialog(
+          title: const Text('Confirm Deletion'),
+          content: Text('Are you sure you want to remove ${user['name']}?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  users.removeAt(index);
+                });
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('${user['name']} removed')),
+                );
+              },
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -123,11 +148,6 @@ class _ChannelInfoScreenState extends State<ChannelInfoScreen> {
                   ],
                 ),
                 const SizedBox(height: 20),
-                Text(
-                  'Details about ${widget.channelName}.',
-                  style: const TextStyle(fontSize: 20),
-                ),
-                const SizedBox(height: 20),
                 Row(
                   children: [
                     Expanded(
@@ -159,7 +179,7 @@ class _ChannelInfoScreenState extends State<ChannelInfoScreen> {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 10),
-                Expanded(
+                Flexible(
                   child: ListView.builder(
                     itemCount: users.length,
                     itemBuilder: (context, index) {
@@ -167,11 +187,9 @@ class _ChannelInfoScreenState extends State<ChannelInfoScreen> {
                       return Dismissible(
                         key: Key(user['email']!),
                         direction: DismissDirection.endToStart,
-                        onDismissed: (_) {
-                          removeUser(index);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('${user['name']} removed')),
-                          );
+                        confirmDismiss: (_) async {
+                          confirmRemoveUser(index);
+                          return false;
                         },
                         background: Container(
                           color: Colors.red,
