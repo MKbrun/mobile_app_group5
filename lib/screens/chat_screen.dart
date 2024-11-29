@@ -72,6 +72,16 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
+  Widget _buildImageMessage(types.ImageMessage message, {required int messageWidth}) {
+    return Image.network(
+      message.uri,
+      width: messageWidth.toDouble(),
+      errorBuilder: (context, error, stackTrace) {
+        return Icon(Icons.broken_image, size: messageWidth.toDouble());
+      },
+    );
+  }
+
   Future<void> _sendMessage(String text) async {
     if (text.isEmpty) return;
 
@@ -141,6 +151,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 _sendMessage(message.text);
               },
               user: types.User(id: _currentUser.uid),
+              imageMessageBuilder: _buildImageMessage,
               customBottomWidget: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Row(
