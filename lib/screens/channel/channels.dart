@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'channel_info_screen.dart';
+import 'channel_info_screen_admin.dart';
 
 class ChannelScreen extends StatefulWidget {
   const ChannelScreen({super.key});

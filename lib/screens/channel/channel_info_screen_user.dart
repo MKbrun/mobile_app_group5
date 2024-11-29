@@ -1,0 +1,1 @@
+//TODO: simplified channel info screen with noe edit capabilities.
