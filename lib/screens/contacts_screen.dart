@@ -13,12 +13,18 @@ class ContactsScreen extends StatefulWidget {
 }
 
 class _ContactsScreenState extends State<ContactsScreen> {
-  final String currentUserId = FirebaseAuth.instance.currentUser!.uid;
+  final String? currentUserId = FirebaseAuth.instance.currentUser?.uid;
 
   Stream<List<Map<String, dynamic>>> _getContactsWithLastMessage() async* {
+    final String? userId = currentUserId;
+    if (userId == null) {
+      yield [];
+      return;
+    }
+
     final contactsStream = FirebaseFirestore.instance
         .collection('users')
-        .where(FieldPath.documentId, isNotEqualTo: currentUserId)
+        .where(FieldPath.documentId, isNotEqualTo: userId)
         .snapshots();
 
     await for (var contactsSnapshot in contactsStream) {
@@ -27,9 +33,9 @@ class _ContactsScreenState extends State<ContactsScreen> {
         final contactId = contactDoc.id;
         final contactData = contactDoc.data();
 
-        final chatId = currentUserId.compareTo(contactId) < 0
-            ? '${currentUserId}_$contactId'
-            : '${contactId}_$currentUserId';
+        final chatId = userId.compareTo(contactId) < 0
+            ? '${userId}_$contactId'
+            : '${contactId}_$userId';
 
         final chatDoc = await FirebaseFirestore.instance
             .collection('private_chats')
@@ -42,7 +48,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
 
         contacts.add({
           'userId': contactId,
-          'username': contactData['username'],
+          'username': contactData['username'] ?? 'Unknown',
           'image_url': contactData['image_url'],
           'lastMessage': lastMessage,
         });
@@ -90,16 +96,24 @@ class _ContactsScreenState extends State<ContactsScreen> {
 
               return ListTile(
                 leading: CircleAvatar(
-                  backgroundImage: imageUrl != null
-                      ? NetworkImage(imageUrl)
-                      : null, 
-                  child: imageUrl == null ? Text(username[0]) : null, 
+                  backgroundImage:
+                      imageUrl != null ? NetworkImage(imageUrl) : null,
+                  onBackgroundImageError: imageUrl != null
+                      ? (exception, stackTrace) {
+                          print('Error loading image: $exception');
+                        }
+                      : null,
+                  child: imageUrl == null &&
+                          username != null &&
+                          username.isNotEmpty
+                      ? Text(username[0])
+                      : null,
                 ),
                 title: Text(
-                  username,
+                  username ?? 'Unknown',
                   style: const TextStyle(fontSize: 20),
                 ),
-                subtitle: lastMessage != null
+                subtitle: lastMessage != null && lastMessage['text'] != null
                     ? Text(
                         lastMessage['text'],
                         maxLines: 1,
@@ -110,7 +124,14 @@ class _ContactsScreenState extends State<ContactsScreen> {
                         'No messages yet.',
                         style: TextStyle(color: Colors.grey),
                       ),
-                onTap: () => navigateToChat(userId, username),
+                onTap: () {
+                  if (userId != null && username != null) {
+                    navigateToChat(userId, username);
+                  } else {
+                    // Handle the case where userId or username is null
+                    print('User ID or Username is null');
+                  }
+                },
               );
             },
           );
