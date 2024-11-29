@@ -1,5 +1,5 @@
-// channels.dart
 import 'package:flutter/material.dart';
+import 'channel_info_screen.dart';
 
 class ChannelScreen extends StatefulWidget {
   const ChannelScreen({super.key});
@@ -32,7 +32,25 @@ class _ChannelScreenState extends State<ChannelScreen> {
     );
   }
 
-  // channel list
+  void navigateToChannelInfo(String channel) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ChannelInfoScreen(
+          channelName: channel,
+          onUpdateChannelName: (updatedName) {
+            setState(() {
+              int index = channels.indexOf(channel);
+              if (index != -1) {
+                channels[index] = updatedName;
+              }
+            });
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -40,12 +58,17 @@ class _ChannelScreenState extends State<ChannelScreen> {
       body: ListView.builder(
         itemCount: channels.length,
         itemBuilder: (context, index) {
+          final String channel = channels[index];
           return ListTile(
             title: Text(
-              channels[index],
-              style: const TextStyle(fontSize: 25),
+              channel,
+              style: const TextStyle(fontSize: 20),
             ),
-            onTap: () => navigateToChannelDetail(channels[index]),
+            onTap: () => navigateToChannelDetail(channel),
+            trailing: IconButton(
+              icon: const Icon(Icons.info_outline),
+              onPressed: () => navigateToChannelInfo(channel),
+            ),
           );
         },
       ),
@@ -64,7 +87,7 @@ class ChannelDetailScreen extends StatelessWidget {
       appBar: AppBar(title: Text(channelName)),
       body: Center(
         child: Text(
-          '$channelName!',
+          'Welcome to $channelName!',
           style: const TextStyle(fontSize: 25),
         ),
       ),
