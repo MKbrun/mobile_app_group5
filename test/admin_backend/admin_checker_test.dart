@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 
-import 'package:mobile_app_group5/backend/admin/admin_checker.dart';
+import 'package:mobile_app_group5/backend/admin_backend/admin_checker.dart';
 import 'admin_checker_test.mocks.dart';
 
 @GenerateMocks([

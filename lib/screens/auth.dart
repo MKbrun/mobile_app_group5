@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:mobile_app_group5/backend/admin/admin_checker.dart';
+import 'package:mobile_app_group5/backend/admin_backend/admin_checker.dart';
 import 'package:mobile_app_group5/screens/primaryNavigationScreen.dart';
 import 'package:mobile_app_group5/widgets/profile_image_picker.dart';
 
@@ -44,10 +44,6 @@ class _AuthScreenState extends State<AuthScreen> {
         _isAutheticating = true;
       });
 
-      if (_isLogin) {
-        final userCredentials = await _firebase.signInWithEmailAndPassword(
-            email: _enteredEmail, password: _enteredPassword);
-      } else {
         final userCredentials = await _firebase.createUserWithEmailAndPassword(
             email: _enteredEmail, password: _enteredPassword);
 
@@ -75,7 +71,6 @@ class _AuthScreenState extends State<AuthScreen> {
           'image_url': imageURL,
           'role': role, // Assign role
         });
-      }
 
       Navigator.pushReplacement(
         context,
