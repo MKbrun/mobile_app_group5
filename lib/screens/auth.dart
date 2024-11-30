@@ -307,3 +307,15 @@ class _AuthScreenState extends State<AuthScreen> {
     );
   }
 }
+
+// Logout function
+Future<void> logout(BuildContext context) async {
+  try {
+    await _firebase.signOut();
+    Navigator.of(context).pushReplacementNamed('/auth');
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Error logging out: $e')),
+    );
+  }
+}

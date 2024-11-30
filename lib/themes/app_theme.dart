@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 class AppTheme {
   static const Color blueColor = Color(0xFF7097BC); // New blue color
   static const Color lightGreenColor = Color(0xFFA6CF98); // Light green color
+  static const Color darkBlueColor =
+      Color.fromARGB(255, 81, 125, 167); // New darker blue color
 
   static ThemeData lightTheme = ThemeData(
     primaryColor: Color.fromARGB(255, 242, 244, 247),
@@ -54,7 +56,7 @@ class AppTheme {
         borderRadius: BorderRadius.circular(10),
       ),
       labelStyle: TextStyle(color: blueColor),
-      hintStyle: TextStyle(color: Colors.grey),
+      hintStyle: const TextStyle(color: Colors.grey),
     ),
   );
 
