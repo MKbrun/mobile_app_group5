@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 class AppTheme {
   static const Color blueColor = Color(0xFF7097BC); // New blue color
   static const Color lightGreenColor = Color(0xFFA6CF98); // Light green color
-  static const Color darkBlueColor = Color(0xFF0056B3); // New darker blue color
+  static const Color darkBlueColor =
+      Color.fromARGB(255, 81, 125, 167); // New darker blue color
 
   static ThemeData lightTheme = ThemeData(
     primaryColor: Colors.white,
