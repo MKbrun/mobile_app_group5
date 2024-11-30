@@ -1,63 +1,79 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_app_group5/backend/channel_backend/channel_logic.dart';
+import 'package:mobile_app_group5/themes/app_theme.dart';
 
-class ChannelInfoScreen extends StatefulWidget {
+class ChannelInfoScreenAdmin extends StatefulWidget {
   final String channelId;
   final String channelName;
   final List<String> members;
   final ValueChanged<String> onUpdateChannelName;
-  final ValueChanged<List<String>> onUpdateMembersList; // New callback for members
+  final ValueChanged<List<String>> onUpdateMembersList;
+  final VoidCallback onDeleteChannel;
 
-  const ChannelInfoScreen({
+  const ChannelInfoScreenAdmin({
     super.key,
     required this.channelId,
     required this.channelName,
     required this.members,
     required this.onUpdateChannelName,
-    required this.onUpdateMembersList, // Pass the callback here
+    required this.onUpdateMembersList,
+    required this.onDeleteChannel,
   });
 
   @override
-  State<ChannelInfoScreen> createState() => _ChannelInfoScreenState();
+  State<ChannelInfoScreenAdmin> createState() => _ChannelInfoScreenAdminState();
 }
 
-class _ChannelInfoScreenState extends State<ChannelInfoScreen> {
+class _ChannelInfoScreenAdminState extends State<ChannelInfoScreenAdmin> {
   late TextEditingController _channelNameController;
-  late TextEditingController _emailController;
   late List<String> members;
+  List<Map<String, dynamic>> users = [];
   final ChannelLogic channelLogic = ChannelLogic();
 
   @override
   void initState() {
     super.initState();
     _channelNameController = TextEditingController(text: widget.channelName);
-    _emailController = TextEditingController();
     members = List<String>.from(widget.members);
+    fetchUsers(); // Fetch users from backend
   }
 
   @override
   void dispose() {
     _channelNameController.dispose();
-    _emailController.dispose();
     super.dispose();
   }
 
-  void saveUpdatedDetails() async {
+  Future<void> fetchUsers() async {
+  try {
+    final fetchedUsers = await channelLogic.fetchAllUsers();
+    setState(() {
+      users = fetchedUsers.where((user) => user['id'] != 'adminList').toList();
+    });
+  } catch (e) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to fetch users')),
+      );
+    }
+  }
+}
+
+  Future<void> saveUpdatedDetails() async {
     final updatedName = _channelNameController.text.trim();
 
     try {
-      // Save updated channel name and members
       await channelLogic.updateChannel(
         channelId: widget.channelId,
         name: updatedName,
         members: members,
       );
-      widget.onUpdateChannelName(updatedName); // Update the channel name in the parent screen
-      widget.onUpdateMembersList(members); // Update the members list in the parent screen
+      widget.onUpdateChannelName(updatedName);
+      widget.onUpdateMembersList(members);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Channel updated successfully')),
       );
-      Navigator.of(context).pop(); // Close the screen
+      Navigator.of(context).pop();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Failed to update channel')),
@@ -65,9 +81,8 @@ class _ChannelInfoScreenState extends State<ChannelInfoScreen> {
     }
   }
 
-  void addMember() async {
-    final email = _emailController.text.trim();
-    if (email.isNotEmpty && !members.contains(email)) {
+  Future<void> addMember(String email) async {
+    if (!members.contains(email)) {
       setState(() {
         members.add(email);
       });
@@ -77,7 +92,7 @@ class _ChannelInfoScreenState extends State<ChannelInfoScreen> {
           channelId: widget.channelId,
           members: members,
         );
-        widget.onUpdateMembersList(members); // Notify parent screen about member update
+        widget.onUpdateMembersList(members);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('$email added successfully')),
         );
@@ -86,11 +101,10 @@ class _ChannelInfoScreenState extends State<ChannelInfoScreen> {
           const SnackBar(content: Text('Failed to add member')),
         );
       }
-      _emailController.clear();
     }
   }
 
-  void removeMember(String email) async {
+  Future<void> removeMember(String email) async {
     if (members.contains(email)) {
       setState(() {
         members.remove(email);
@@ -101,7 +115,7 @@ class _ChannelInfoScreenState extends State<ChannelInfoScreen> {
           channelId: widget.channelId,
           members: members,
         );
-        widget.onUpdateMembersList(members); // Notify parent screen about member update
+        widget.onUpdateMembersList(members);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('$email removed successfully')),
         );
@@ -113,49 +127,157 @@ class _ChannelInfoScreenState extends State<ChannelInfoScreen> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Edit: ${widget.channelName}'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.save),
-            onPressed: saveUpdatedDetails,
-          ),
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _channelNameController,
-              decoration: const InputDecoration(labelText: 'Channel Name'),
-            ),
-            const SizedBox(height: 20),
-            TextField(
-              controller: _emailController,
-              decoration: const InputDecoration(labelText: 'Add Member (Email)'),
-              onSubmitted: (_) => addMember(),
-            ),
-            const SizedBox(height: 10),
-            Expanded(
-              child: ListView(
-                children: members
-                    .map((email) => ListTile(
-                          title: Text(email),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.remove_circle),
-                            onPressed: () => removeMember(email),
-                          ),
-                        ))
-                    .toList(),
-              ),
-            ),
-          ],
+  List<Map<String, dynamic>> getSortedUsers() {
+    // Group and sort users: members at the top, others below
+    final channelMembers = users.where((user) => members.contains(user['email'])).toList();
+    final nonMembers = users.where((user) => !members.contains(user['email'])).toList();
+    return [...channelMembers, {'separator': true}, ...nonMembers];
+  }
+
+  Future<void> deleteChannel() async {
+  final confirmation = await showDialog<bool>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: const Text('Delete Channel'),
+      content: const Text('Are you sure you want to delete this channel?'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(dialogContext).pop(false),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.of(dialogContext).pop(true),
+          child: const Text('Delete'),
+        ),
+      ],
+    ),
+  );
+
+  if (confirmation == true) {
+    try {
+      await channelLogic.deleteChannel(widget.channelId);
+
+      widget.onDeleteChannel(); // Notify parent about deletion
+
+      Navigator.of(context).pop(); // Exit info screen
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Channel deleted successfully')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to delete channel: $e')),
+      );
+    }
+  }
+}
+
+ @override
+Widget build(BuildContext context) {
+  final sortedUsers = getSortedUsers();
+
+  return Scaffold(
+    appBar: AppBar(
+      title: Text(
+        'Edit: ${widget.channelName}',
+        style: const TextStyle(
+          color: Colors.white, // White text for contrast
+          fontWeight: FontWeight.bold,
         ),
       ),
-    );
-  }
+      centerTitle: true,
+      backgroundColor: AppTheme.blueColor,
+      elevation: 0,
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.save, color: Colors.white),
+          onPressed: saveUpdatedDetails,
+        ),
+      ],
+    ),
+    body: Column(
+      children: [
+        const SizedBox(height: 20),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: TextField(
+            controller: _channelNameController,
+            decoration: InputDecoration(
+              labelText: 'Channel Name',
+              labelStyle: const TextStyle(color: AppTheme.blueColor),
+              focusedBorder: OutlineInputBorder(
+                borderSide: const BorderSide(color: AppTheme.blueColor),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderSide: const BorderSide(color: AppTheme.blueColor),
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: ElevatedButton(
+            onPressed: deleteChannel,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Delete Channel'),
+          ),
+        ),
+        Expanded(
+          child: ListView.builder(
+            itemCount: sortedUsers.length,
+            itemBuilder: (context, index) {
+              final user = sortedUsers[index];
+              if (user.containsKey('separator')) {
+                return const Divider(
+                  thickness: 2,
+                  color: AppTheme.blueColor,
+                );
+              }
+              final isMember = members.contains(user['email']);
+              return Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppTheme.blueColor.withOpacity(0.9), // Darker background
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundImage: NetworkImage(user['image_url']),
+                  ),
+                  title: Text(
+                    user['email'],
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  subtitle: Text(
+                    user['username'],
+                    style: const TextStyle(
+                      color: Colors.white70,
+                    ),
+                  ),
+                  trailing: IconButton(
+                    icon: Icon(
+                      isMember ? Icons.remove_circle : Icons.add_circle,
+                      color: isMember ? Colors.red : AppTheme.lightGreenColor,
+                    ),
+                    onPressed: () => isMember
+                        ? removeMember(user['email'])
+                        : addMember(user['email']),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    ),
+  );
+}
 }

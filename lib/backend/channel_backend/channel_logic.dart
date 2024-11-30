@@ -6,46 +6,105 @@ class ChannelLogic {
   ChannelLogic({FirebaseFirestore? firestore})
       : firestore = firestore ?? FirebaseFirestore.instance;
 
+  // Fetch all users from Firestore
+  Future<List<Map<String, dynamic>>> fetchAllUsers() async {
+    try {
+      final snapshot = await firestore.collection('users').get();
+
+      final excludedDocumentId = 'adminList';
+
+      return snapshot.docs.where((doc) => doc.id != excludedDocumentId).map((doc) {
+        return {
+          'id': doc.id,
+          'email': doc['email'],
+          'image_url': doc['image_url'],
+          'username': doc['username'],
+        };
+      }).toList();
+    } catch (e) {
+      print('Error fetching users: $e');
+      rethrow;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> fetchChannels({
+    required String userId,
+    required String role,
+  }) async {
+    try {
+      final channelCollection = firestore.collection('channels');
+
+      QuerySnapshot<Map<String, dynamic>> snapshot;
+      if (role == 'admin') {
+        // Admins can see all channels
+        snapshot = await channelCollection.get();
+      } else {
+        // Users only see channels they are members of
+        snapshot = await channelCollection.where('members', arrayContains: userId).get();
+      }
+
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        return {
+          'id': doc.id,
+          'name': data['name'] ?? '',
+          'members': List<String>.from(data['members'] ?? []),
+        };
+      }).toList();
+    } catch (e) {
+      print('Error fetching channels: $e');
+      rethrow;
+    }
+  }
+
+  // Create a channel
   Future<void> createChannel({
     required String name,
     required List<String> members,
   }) async {
     try {
       final channelCollection = firestore.collection('channels');
-
-      // Log the data to be added
-      print('Creating channel with data: name=$name, members=$members');
-
       final channelData = {
         'name': name,
         'members': members,
       };
 
       final channelDocRef = await channelCollection.add(channelData);
-
-      // Log the generated document ID
-      print('Channel created with ID: ${channelDocRef.id}');
-
-      // Initialize the messages subcollection with a welcome message
       await channelDocRef.collection('messages').add({
-        'content': 'Welcome to the channel!',
+        'content': 'Welcome to the $name channel!',
         'createdBy': 'system',
         'createdAt': FieldValue.serverTimestamp(),
       });
-
-      // Confirm subcollection addition
-      print('Welcome message added to channel: ${channelDocRef.id}');
     } catch (e) {
       print('Error creating channel: $e');
       rethrow;
     }
   }
 
-  // Method to update a channel
+  // Delete a channel and its messages subcollection
+  Future<void> deleteChannel(String channelId) async {
+    try {
+      final channelDoc = firestore.collection('channels').doc(channelId);
+
+      // Delete messages in the subcollection
+      final messagesSnapshot = await channelDoc.collection('messages').get();
+      for (final doc in messagesSnapshot.docs) {
+        await doc.reference.delete();
+      }
+
+      // Delete the channel document
+      await channelDoc.delete();
+      print('Channel $channelId deleted successfully.');
+    } catch (e) {
+      print('Error deleting channel: $e');
+      rethrow;
+    }
+  }
+
+  // Update a channel
   Future<void> updateChannel({
     required String channelId,
     String? name,
-    String? description,
     List<String>? members,
   }) async {
     try {

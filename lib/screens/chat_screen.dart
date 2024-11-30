@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_chat_ui/flutter_chat_ui.dart';
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:io';
 
 class ChatScreen extends StatefulWidget {
@@ -29,41 +31,44 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _initializeChat() {
-
     chatId = _currentUser.uid.compareTo(widget.userId) < 0
         ? '${_currentUser.uid}_${widget.userId}'
         : '${widget.userId}_${_currentUser.uid}';
 
-    
     FirebaseFirestore.instance
         .collection('private_chat_messages')
         .where('chatId', isEqualTo: chatId)
         .orderBy('timestamp')
         .snapshots()
         .listen((snapshot) {
-      final messages = snapshot.docs.map((doc) {
-        final data = doc.data() as Map<String, dynamic>;
+      final messages = snapshot.docs
+          .map((doc) {
+            final data = doc.data() as Map<String, dynamic>;
 
-        if (data['type'] == 'text') {
-          return types.TextMessage(
-            author: types.User(id: data['senderId']),
-            createdAt: (data['timestamp'] as Timestamp).millisecondsSinceEpoch,
-            id: doc.id,
-            text: data['text'],
-          );
-        } else if (data['type'] == 'image') {
-          return types.ImageMessage(
-            author: types.User(id: data['senderId']),
-            createdAt: (data['timestamp'] as Timestamp).millisecondsSinceEpoch,
-            id: doc.id,
-            name: data['name'],
-            size: data['size'],
-            uri: data['uri'],
-          );
-        } else {
-          return null;
-        }
-      }).whereType<types.Message>().toList();
+            if (data['type'] == 'text') {
+              return types.TextMessage(
+                author: types.User(id: data['senderId']),
+                createdAt:
+                    (data['timestamp'] as Timestamp).millisecondsSinceEpoch,
+                id: doc.id,
+                text: data['text'],
+              );
+            } else if (data['type'] == 'image') {
+              return types.ImageMessage(
+                author: types.User(id: data['senderId']),
+                createdAt:
+                    (data['timestamp'] as Timestamp).millisecondsSinceEpoch,
+                id: doc.id,
+                name: data['name'],
+                size: data['size'],
+                uri: data['uri'],
+              );
+            } else {
+              return null;
+            }
+          })
+          .whereType<types.Message>()
+          .toList();
 
       setState(() {
         _messages.clear();
@@ -72,13 +77,29 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
-  Widget _buildImageMessage(types.ImageMessage message, {required int messageWidth}) {
-    return Image.network(
-      message.uri,
+  Widget _buildImageMessage(types.ImageMessage message,
+      {required int messageWidth}) {
+    final placeholderHeight = messageWidth.toDouble() * 1.5;
+
+    return CachedNetworkImage(
+      imageUrl: message.uri,
       width: messageWidth.toDouble(),
-      errorBuilder: (context, error, stackTrace) {
-        return Icon(Icons.broken_image, size: messageWidth.toDouble());
-      },
+      fit: BoxFit.cover,
+      placeholder: (context, url) => Container(
+        width: messageWidth.toDouble(),
+        height: placeholderHeight * 0.4,
+        color: Colors.grey[300],
+        child: Center(
+          child: CircularProgressIndicator(),
+        ),
+      ),
+      fadeInDuration: const Duration(milliseconds: 300),
+      errorWidget: (context, url, error) => Container(
+        width: messageWidth.toDouble(),
+        height: placeholderHeight * 0.4,
+        color: Colors.grey[300],
+        child: Icon(Icons.broken_image, size: 40),
+      ),
     );
   }
 
@@ -93,10 +114,14 @@ class _ChatScreenState extends State<ChatScreen> {
       'timestamp': FieldValue.serverTimestamp(),
     };
 
-    await FirebaseFirestore.instance.collection('private_chat_messages').add(message);
+    await FirebaseFirestore.instance
+        .collection('private_chat_messages')
+        .add(message);
 
-    
-    await FirebaseFirestore.instance.collection('private_chats').doc(chatId).set({
+    await FirebaseFirestore.instance
+        .collection('private_chats')
+        .doc(chatId)
+        .set({
       'UserIds': [_currentUser.uid, widget.userId],
       'lastMessage': {
         'senderId': _currentUser.uid,
@@ -114,27 +139,63 @@ class _ChatScreenState extends State<ChatScreen> {
       final file = File(image.path);
       final fileSize = file.lengthSync();
 
-      final message = {
-        'chatId': chatId,
-        'senderId': _currentUser.uid,
-        'type': 'image',
-        'name': image.name,
-        'size': fileSize,
-        'uri': image.path,
-        'timestamp': FieldValue.serverTimestamp(),
-      };
+      final placeholderMessage = types.ImageMessage(
+        author: types.User(id: _currentUser.uid),
+        createdAt: DateTime.now().millisecondsSinceEpoch,
+        id: DateTime.now().toString(),
+        name: image.name,
+        size: fileSize,
+        uri: '',
+        status: types.Status.sending,
+      );
 
-      await FirebaseFirestore.instance.collection('private_chat_messages').add(message);
+      setState(() {
+        _messages.insert(0, placeholderMessage);
+      });
 
-      
-      await FirebaseFirestore.instance.collection('private_chats').doc(chatId).set({
-        'UserIds': [_currentUser.uid, widget.userId],
-        'lastMessage': {
+      try {
+        final storageRef = FirebaseStorage.instance
+            .ref()
+            .child('private_message_images')
+            .child('$chatId-${DateTime.now().millisecondsSinceEpoch}.jpg');
+        await storageRef.putFile(file);
+
+        final imageUrl = await storageRef.getDownloadURL();
+
+        final message = {
+          'chatId': chatId,
           'senderId': _currentUser.uid,
-          'text': '[Image]',
+          'type': 'image',
+          'name': image.name,
+          'size': fileSize,
+          'uri': imageUrl,
           'timestamp': FieldValue.serverTimestamp(),
-        },
-      }, SetOptions(merge: true));
+        };
+
+        final docRef = await FirebaseFirestore.instance
+            .collection('private_chat_messages')
+            .add(message);
+
+        setState(() {
+          final index =
+              _messages.indexWhere((msg) => msg.id == placeholderMessage.id);
+          if (index != -1) {
+            _messages[index] = types.ImageMessage(
+              author: types.User(id: _currentUser.uid),
+              createdAt: DateTime.now().millisecondsSinceEpoch,
+              id: docRef.id,
+              name: image.name,
+              size: fileSize,
+              uri: imageUrl,
+            );
+          }
+        });
+      } catch (error) {
+        print("Error uploading image: $error");
+        setState(() {
+          _messages.removeWhere((msg) => msg.id == placeholderMessage.id);
+        });
+      }
     }
   }
 

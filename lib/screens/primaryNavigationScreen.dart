@@ -27,6 +27,7 @@ class _PrimaryNavigationScreenState extends State<PrimaryNavigationScreen>
   late Animation<Offset> _offsetAnimation;
 
   final List<Widget> _screens = [
+    ChannelScreen(),
     const ContactsScreen(),
     const ChannelScreen(),
     const CalendarScreen(),

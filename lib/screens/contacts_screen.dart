@@ -7,53 +7,67 @@ class ContactsScreen extends StatefulWidget {
   const ContactsScreen({super.key});
 
   @override
-  State<StatefulWidget> createState() {
-    return _ContactsScreenState();
-  }
+  State<StatefulWidget> createState() => _ContactsScreenState();
 }
 
 class _ContactsScreenState extends State<ContactsScreen> {
   final String? currentUserId = FirebaseAuth.instance.currentUser?.uid;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
   Stream<List<Map<String, dynamic>>> _getContactsWithLastMessage() async* {
-    final String? userId = currentUserId;
-    if (userId == null) {
+    if (currentUserId == null) {
       yield [];
       return;
     }
 
-    final contactsStream = FirebaseFirestore.instance
-        .collection('users')
-        .where(FieldPath.documentId, isNotEqualTo: userId)
+    final privateChatsStream = FirebaseFirestore.instance
+        .collection('private_chats')
         .snapshots();
 
-    await for (var contactsSnapshot in contactsStream) {
+    await for (var chatsSnapshot in privateChatsStream) {
       final List<Map<String, dynamic>> contacts = [];
+
+      final contactsSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .where(FieldPath.documentId, isNotEqualTo: currentUserId)
+          .get();
+
       for (var contactDoc in contactsSnapshot.docs) {
         final contactId = contactDoc.id;
         final contactData = contactDoc.data();
 
-        final chatId = userId.compareTo(contactId) < 0
-            ? '${userId}_$contactId'
-            : '${contactId}_$userId';
+        final chatId = currentUserId!.compareTo(contactId) < 0
+            ? '${currentUserId}_$contactId'
+            : '${contactId}_$currentUserId';
 
-        final chatDoc = await FirebaseFirestore.instance
-            .collection('private_chats')
-            .doc(chatId)
-            .get();
+        final chatDocs = chatsSnapshot.docs.where((doc) => doc.id == chatId);
+        final chatDoc = chatDocs.isNotEmpty ? chatDocs.first : null;
 
-        final lastMessage = chatDoc.exists
-            ? chatDoc['lastMessage'] as Map<String, dynamic>?
-            : null;
+        final lastMessage = chatDoc?.data()['lastMessage'] as Map<String, dynamic>?;
+        final lastMessageTimestamp = lastMessage?['timestamp'] as Timestamp?;
 
         contacts.add({
           'userId': contactId,
           'username': contactData['username'] ?? 'Unknown',
           'image_url': contactData['image_url'],
           'lastMessage': lastMessage,
+          'timestamp': lastMessageTimestamp?.toDate() ?? DateTime(1970),
         });
       }
-      yield contacts;
+
+      contacts.sort((a, b) => b['timestamp'].compareTo(a['timestamp']));
+
+      final filteredContacts = _searchQuery.isEmpty
+          ? contacts
+          : contacts
+              .where((contact) =>
+                  contact['username']
+                      .toLowerCase()
+                      .contains(_searchQuery.toLowerCase()))
+              .toList();
+
+      yield filteredContacts;
     }
   }
 
@@ -72,7 +86,28 @@ class _ContactsScreenState extends State<ContactsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Contacts')),
+      appBar: AppBar(
+        title: const Text('Contacts'),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(48.0),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: TextField(
+              controller: _searchController,
+              decoration: const InputDecoration(
+                hintText: 'Search Contacts...',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.search),
+              ),
+              onChanged: (value) {
+                setState(() {
+                  _searchQuery = value.trim();
+                });
+              },
+            ),
+          ),
+        ),
+      ),
       body: StreamBuilder<List<Map<String, dynamic>>>(
         stream: _getContactsWithLastMessage(),
         builder: (context, snapshot) {
@@ -103,14 +138,9 @@ class _ContactsScreenState extends State<ContactsScreen> {
                           print('Error loading image: $exception');
                         }
                       : null,
-                  child: imageUrl == null &&
-                          username != null &&
-                          username.isNotEmpty
-                      ? Text(username[0])
-                      : null,
                 ),
                 title: Text(
-                  username ?? 'Unknown',
+                  username,
                   style: const TextStyle(fontSize: 20),
                 ),
                 subtitle: lastMessage != null && lastMessage['text'] != null
@@ -128,7 +158,6 @@ class _ContactsScreenState extends State<ContactsScreen> {
                   if (userId != null && username != null) {
                     navigateToChat(userId, username);
                   } else {
-                    // Handle the case where userId or username is null
                     print('User ID or Username is null');
                   }
                 },

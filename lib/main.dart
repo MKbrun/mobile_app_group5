@@ -37,11 +37,11 @@ class App extends StatelessWidget {
 
           // If user data exists, show home screen
           if (snapshot.hasData) {
-            return HomeScreen();
+            return AuthScreen();
           }
 
           // Otherwise, show login screen
-          return HomeScreen(); // Replace with LoginScreen if available
+          return AuthScreen(); // Replace with LoginScreen if available
         },
       ),
     );

@@ -8,14 +8,14 @@ class AppTheme {
       Color.fromARGB(255, 81, 125, 167); // New darker blue color
 
   static ThemeData lightTheme = ThemeData(
-    primaryColor: Colors.white,
+    primaryColor: Color.fromARGB(255, 242, 244, 247),
     colorScheme: ColorScheme.light(
-      primary: Colors.white,
+      primary: Color.fromARGB(255, 242, 244, 247),
       secondary: blueColor, // Use the new blue color as the secondary color
     ),
-    scaffoldBackgroundColor: Colors.white,
-    appBarTheme: const AppBarTheme(
-      backgroundColor: Colors.white,
+    scaffoldBackgroundColor: Color.fromARGB(255, 242, 244, 247),
+    appBarTheme: AppBarTheme(
+      backgroundColor: Color.fromARGB(255, 242, 244, 247),
       iconTheme: IconThemeData(color: Colors.black), // Black icons in AppBar
       titleTextStyle: TextStyle(
         color: Colors.black,
@@ -30,7 +30,7 @@ class AppTheme {
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: blueColor, // Default blue color for elevated buttons
-        foregroundColor: Colors.white, // White text on buttons
+        foregroundColor: Color.fromARGB(255, 242, 244, 247), // White text on buttons
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
         ),
@@ -42,7 +42,7 @@ class AppTheme {
       ),
     ),
     bottomNavigationBarTheme: BottomNavigationBarThemeData(
-      backgroundColor: Colors.white,
+      backgroundColor: Color.fromARGB(255, 242, 244, 247),
       selectedItemColor: blueColor, // Blue color for selected nav items
       unselectedItemColor: Colors.grey, // Gray for unselected items
     ),
@@ -63,7 +63,7 @@ class AppTheme {
   // Define a custom button style for the light green button
   static final ButtonStyle lightGreenButtonStyle = ElevatedButton.styleFrom(
     backgroundColor: lightGreenColor,
-    foregroundColor: Colors.white,
+    foregroundColor: Color.fromARGB(255, 242, 244, 247),
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(8),
     ),
