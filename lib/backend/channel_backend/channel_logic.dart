@@ -71,12 +71,32 @@ class ChannelLogic {
 
       final channelDocRef = await channelCollection.add(channelData);
       await channelDocRef.collection('messages').add({
-        'content': 'Welcome to the channel!',
+        'content': 'Welcome to the $name channel!',
         'createdBy': 'system',
         'createdAt': FieldValue.serverTimestamp(),
       });
     } catch (e) {
       print('Error creating channel: $e');
+      rethrow;
+    }
+  }
+
+  // Delete a channel and its messages subcollection
+  Future<void> deleteChannel(String channelId) async {
+    try {
+      final channelDoc = firestore.collection('channels').doc(channelId);
+
+      // Delete messages in the subcollection
+      final messagesSnapshot = await channelDoc.collection('messages').get();
+      for (final doc in messagesSnapshot.docs) {
+        await doc.reference.delete();
+      }
+
+      // Delete the channel document
+      await channelDoc.delete();
+      print('Channel $channelId deleted successfully.');
+    } catch (e) {
+      print('Error deleting channel: $e');
       rethrow;
     }
   }

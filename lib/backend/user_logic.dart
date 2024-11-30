@@ -37,6 +37,25 @@ class UserService {
     }
   }
 
+  // Get the currently logged-in user's username
+  Future<String> getUsername() async {
+    final currentUser = auth.currentUser;
+    if (currentUser == null) {
+      throw Exception('No user is currently logged in');
+    }
+
+    try {
+      final doc = await firestore.collection('users').doc(currentUser.uid).get();
+      if (doc.exists && doc.data() != null) {
+        return doc.data()!['username'] ?? 'Unknown User'; // Default if username is missing
+      } else {
+        throw Exception('User data not found in Firestore');
+      }
+    } catch (e) {
+      throw Exception('Failed to fetch username: $e');
+    }
+  }
+
   // Get the currently logged-in user's email
   Future<String> getUserEmail() async {
     final currentUser = auth.currentUser;

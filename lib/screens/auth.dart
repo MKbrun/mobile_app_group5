@@ -7,10 +7,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mobile_app_group5/backend/admin_backend/admin_checker.dart';
 import 'package:mobile_app_group5/screens/primaryNavigationScreen.dart';
 import 'package:mobile_app_group5/widgets/profile_image_picker.dart';
+import 'package:mobile_app_group5/themes/app_theme.dart';
 
 final _firebase = FirebaseAuth.instance;
 
-//Login screen with both "login" and "signup" methods
+// Login screen with both "login" and "signup" methods
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
 
@@ -28,12 +29,12 @@ class _AuthScreenState extends State<AuthScreen> {
   var _enteredPassword = '';
   var _enteredUsername = '';
   File? _selectedImage;
-  var _isAutheticating = false;
+  var _isAuthenticating = false;
 
   void _submit() async {
     final isValid = _form.currentState!.validate();
 
-    if (!isValid || !_isLogin && _selectedImage == null) {
+    if (!isValid || (!_isLogin && _selectedImage == null)) {
       return;
     }
 
@@ -41,27 +42,28 @@ class _AuthScreenState extends State<AuthScreen> {
 
     try {
       setState(() {
-        _isAutheticating = true;
+        _isAuthenticating = true;
       });
 
       if (_isLogin) {
         await _firebase.signInWithEmailAndPassword(
-            email: _enteredEmail, password: _enteredPassword);
+          email: _enteredEmail,
+          password: _enteredPassword,
+        );
       } else {
         final userCredentials = await _firebase.createUserWithEmailAndPassword(
-            email: _enteredEmail, password: _enteredPassword);
+          email: _enteredEmail,
+          password: _enteredPassword,
+        );
 
-        //Stores the selected profilepicture in the Firebase storage
         final storageRef = FirebaseStorage.instance
             .ref()
             .child('profile_images')
             .child('${userCredentials.user!.uid}.jpg');
 
         await storageRef.putFile(_selectedImage!);
-        final imageURL = await storageRef
-            .getDownloadURL(); //Gets the URL of the image for later use in the app
+        final imageURL = await storageRef.getDownloadURL();
 
-        // Dynamically assign role using isAdmin
         final adminChecker = AdminChecker();
         final bool isAdmin = await adminChecker.isAdmin(_enteredEmail);
 
@@ -73,7 +75,7 @@ class _AuthScreenState extends State<AuthScreen> {
           'username': _enteredUsername,
           'email': _enteredEmail,
           'image_url': imageURL,
-          'role': role, // Assign role
+          'role': role,
         });
       }
 
@@ -83,7 +85,6 @@ class _AuthScreenState extends State<AuthScreen> {
       );
     } on FirebaseAuthException catch (error) {
       if (mounted) {
-        // Ensure the widget is still mounted
         ScaffoldMessenger.of(context).clearSnackBars();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -91,7 +92,7 @@ class _AuthScreenState extends State<AuthScreen> {
           ),
         );
         setState(() {
-          _isAutheticating = false;
+          _isAuthenticating = false;
         });
       }
     }
@@ -100,123 +101,203 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.primary,
+      backgroundColor: const Color.fromARGB(255, 242, 244, 247),
       body: Center(
         child: SingleChildScrollView(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                decoration: BoxDecoration(
-                  borderRadius:
-                      BorderRadius.circular(20.0), // Adjust for round edges
-                ),
-                margin: EdgeInsets.only(
-                  top: 30,
-                  bottom: 20,
-                  left: 20,
-                  right: 20,
-                ),
-                width: 200,
+                margin: const EdgeInsets.symmetric(vertical: 20),
+                width: 250,
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(20.0),
-                  child: Image.asset('assets/images/Workchat.png'),
+                  child: Image.asset('assets/images/WorkChatTrans.png'),
                 ),
               ),
-              Card(
+              Container(
                 margin: const EdgeInsets.all(20),
-                child: SingleChildScrollView(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Form(
-                        key: _form,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (!_isLogin)
-                              ProfileImagePicker(
-                                onPickImage: (pickedImage) {
-                                  _selectedImage = pickedImage;
-                                },
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppTheme.blueColor.withOpacity(0.9),
+                  borderRadius: BorderRadius.circular(15),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      blurRadius: 10,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Logo inside the form box
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 20),
+                      width: 200,
+                    ),
+                    Form(
+                      key: _form,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (!_isLogin)
+                            ProfileImagePicker(
+                              onPickImage: (pickedImage) {
+                                _selectedImage = pickedImage;
+                              },
+                            ),
+                          TextFormField(
+                            decoration: InputDecoration(
+                              labelText: 'Email Address',
+                              filled: true,
+                              fillColor: const Color.fromARGB(
+                                  255, 242, 244, 247), // Background color
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide.none,
                               ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide.none,
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: const BorderSide(
+                                    color: Colors
+                                        .blue), // Highlight border on focus
+                              ),
+                            ),
+                            keyboardType: TextInputType.emailAddress,
+                            autocorrect: false,
+                            textCapitalization: TextCapitalization.none,
+                            validator: (value) {
+                              if (value == null ||
+                                  value.trim().isEmpty ||
+                                  !value.contains('@')) {
+                                return 'Enter a valid email address.';
+                              }
+                              return null;
+                            },
+                            onSaved: (value) {
+                              _enteredEmail = value!;
+                            },
+                          ),
+                          const SizedBox(height: 10),
+                          if (!_isLogin)
                             TextFormField(
                               decoration: InputDecoration(
-                                labelText: 'Email Adress',
+                                labelText: 'Username',
+                                filled: true,
+                                fillColor: const Color.fromARGB(
+                                    255, 242, 244, 247), // Background color
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  borderSide: BorderSide.none,
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  borderSide: BorderSide.none,
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  borderSide: const BorderSide(
+                                      color: Colors
+                                          .blue), // Highlight border on focus
+                                ),
                               ),
-                              keyboardType: TextInputType.emailAddress,
+                              enableSuggestions: false,
                               autocorrect: false,
                               textCapitalization: TextCapitalization.none,
                               validator: (value) {
                                 if (value == null ||
-                                    value.trim().isEmpty ||
-                                    !value.contains('@')) {
-                                  return 'Enter valid email adress.';
+                                    value.isEmpty ||
+                                    value.trim().length < 4) {
+                                  return 'Username must be at least 4 characters.';
                                 }
                                 return null;
                               },
                               onSaved: (value) {
-                                _enteredEmail = value!;
+                                _enteredUsername = value!;
                               },
                             ),
-                            if (!_isLogin)
-                              TextFormField(
-                                decoration: const InputDecoration(
-                                    labelText: 'Username'),
-                                enableSuggestions: false,
-                                validator: (value) {
-                                  if (value == null ||
-                                      value.isEmpty ||
-                                      value.trim().length < 4) {
-                                    return 'Username must be more than 4 characters';
-                                  }
-                                  return null;
-                                },
-                                onSaved: (value) {
-                                  _enteredUsername = value!;
-                                },
+                          const SizedBox(height: 10),
+                          TextFormField(
+                            decoration: InputDecoration(
+                              labelText: 'Password',
+                              filled: true,
+                              fillColor: const Color.fromARGB(
+                                  255, 242, 244, 247), // Background color
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide.none,
                               ),
-                            TextFormField(
-                              decoration: InputDecoration(
-                                labelText: 'Password',
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide.none,
                               ),
-                              obscureText: true,
-                              validator: (value) {
-                                if (value == null || value.trim().length < 6) {
-                                  return 'Password must be at least 6 characters long.';
-                                }
-                                return null;
-                              },
-                              onSaved: (value) {
-                                _enteredPassword = value!;
-                              },
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: const BorderSide(
+                                    color: Colors
+                                        .blue), // Highlight border on focus
+                              ),
                             ),
-                            const SizedBox(
-                              height: 12,
-                            ),
-                            if (_isAutheticating)
-                              const CircularProgressIndicator(),
-                            if (!_isAutheticating)
-                              ElevatedButton(
-                                onPressed: _submit,
-                                style: ElevatedButton.styleFrom(
-                                  foregroundColor:
-                                      Theme.of(context).colorScheme.primary,
+                            obscureText: true,
+                            validator: (value) {
+                              if (value == null || value.trim().length < 6) {
+                                return 'Password must be at least 6 characters long.';
+                              }
+                              return null;
+                            },
+                            onSaved: (value) {
+                              _enteredPassword = value!;
+                            },
+                          ),
+                          const SizedBox(height: 20),
+                          if (_isAuthenticating)
+                            const CircularProgressIndicator(),
+                          if (!_isAuthenticating)
+                            ElevatedButton(
+                              onPressed: _submit,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor:
+                                    AppTheme.blueColor.withOpacity(0.5),
+                                foregroundColor:
+                                    const Color.fromARGB(255, 242, 244, 247),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 40,
+                                  vertical: 10,
                                 ),
-                                child: Text(_isLogin ? 'Login' : 'Signup'),
                               ),
-                            if (!_isAutheticating)
-                              TextButton(
-                                  onPressed: () {
-                                    setState(() {
-                                      _isLogin = !_isLogin;
-                                    });
-                                  },
-                                  child: Text(_isLogin
-                                      ? 'Create an account'
-                                      : 'I already have an account'))
-                          ],
-                        )),
-                  ),
+                              child: Text(
+                                _isLogin ? 'Login' : 'Signup',
+                                style: const TextStyle(fontSize: 18),
+                              ),
+                            ),
+                          const SizedBox(height: 10),
+                          if (!_isAuthenticating)
+                            TextButton(
+                              onPressed: () {
+                                setState(() {
+                                  _isLogin = !_isLogin;
+                                });
+                              },
+                              child: Text(
+                                _isLogin
+                                    ? 'Create an account'
+                                    : 'I already have an account',
+                                style: const TextStyle(
+                                  color: Color.fromARGB(255, 242, 244, 247),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
