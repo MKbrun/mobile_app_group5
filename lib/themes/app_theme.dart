@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 class AppTheme {
   static const Color blueColor = Color(0xFF7097BC); // New blue color
   static const Color lightGreenColor = Color(0xFFA6CF98); // Light green color
+  static const Color darkBlueColor = Color(0xFF0056B3); // New darker blue color
 
   static ThemeData lightTheme = ThemeData(
     primaryColor: Colors.white,
@@ -12,7 +13,7 @@ class AppTheme {
       secondary: blueColor, // Use the new blue color as the secondary color
     ),
     scaffoldBackgroundColor: Colors.white,
-    appBarTheme: AppBarTheme(
+    appBarTheme: const AppBarTheme(
       backgroundColor: Colors.white,
       iconTheme: IconThemeData(color: Colors.black), // Black icons in AppBar
       titleTextStyle: TextStyle(
@@ -54,7 +55,7 @@ class AppTheme {
         borderRadius: BorderRadius.circular(10),
       ),
       labelStyle: TextStyle(color: blueColor),
-      hintStyle: TextStyle(color: Colors.grey),
+      hintStyle: const TextStyle(color: Colors.grey),
     ),
   );
 
