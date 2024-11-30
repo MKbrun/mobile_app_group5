@@ -3,6 +3,7 @@ import './channel/channels.dart';
 import 'contacts_screen.dart';
 import 'calendar_screen.dart';
 import 'shift_management_screen.dart';
+import 'profile_screen.dart';
 import 'package:mobile_app_group5/themes/app_theme.dart';
 
 class PrimaryNavigationScreen extends StatefulWidget {
@@ -71,9 +72,38 @@ class _PrimaryNavigationScreenState extends State<PrimaryNavigationScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
+      body: Stack(
+        children: [
+          // Main content: IndexedStack for navigation
+          IndexedStack(
+            index: _currentIndex,
+            children: _screens,
+          ),
+
+          // Floating profile icon at the top-right
+          Positioned(
+            top: 40, // Adjust for the status bar
+            right: 16, // Padding from the right edge
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ProfileScreen(),
+                  ),
+                );
+              },
+              child: const CircleAvatar(
+                radius: 20,
+                backgroundColor: Colors.blue,
+                child: Icon(
+                  Icons.person,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
       bottomNavigationBar: Container(
         width: MediaQuery.of(context).size.width,
