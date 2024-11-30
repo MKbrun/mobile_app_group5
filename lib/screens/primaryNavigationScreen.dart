@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'channels.dart';
+import './channel/channels.dart';
 import 'contacts_screen.dart';
 import 'calendar_screen.dart';
 
@@ -15,7 +15,7 @@ class _PrimaryNavigationScreenState extends State<PrimaryNavigationScreen> {
   int _currentIndex = 0;
 
   final List<Widget> _screens = [
-    const ChannelScreen(),
+    ChannelScreen(),
     const ContactsScreen(),
     const CalendarScreen(),
   ];

@@ -1,5 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'channel_info_screen_admin.dart';
+import 'package:mobile_app_group5/backend/channel_backend/channel_logic.dart';
+import 'package:mobile_app_group5/backend/user_logic.dart';
+import 'package:mobile_app_group5/screens/channel/channel_info_screen_admin.dart';
+import 'package:mobile_app_group5/screens/channel/channel_info_screen_user.dart';
+import 'package:mobile_app_group5/screens/channel/channel_messages_screen.dart';
 
 class ChannelScreen extends StatefulWidget {
   const ChannelScreen({super.key});
@@ -9,88 +14,150 @@ class ChannelScreen extends StatefulWidget {
 }
 
 class _ChannelScreenState extends State<ChannelScreen> {
-  List<String> channels = [];
+  final ChannelLogic channelLogic = ChannelLogic();
+  final UserService userLogic = UserService(); // To fetch the user role
+  List<Map<String, dynamic>> channels = [];
+  String? userRole;
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    fetchChannels();
+    initialize();
   }
 
-  void fetchChannels() {
-    setState(() {
-      channels = ['Channel 1', 'Channel 2', 'Channel 3', 'Channel 4'];
-    });
+  Future<void> initialize() async {
+    try {
+      // Fetch the logged-in user's role
+      final role = await userLogic.getUserRole();
+      setState(() {
+        userRole = role;
+      });
+      fetchChannels();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load user role: $e')),
+      );
+    }
   }
 
-  void navigateToChannelDetail(String channel) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ChannelDetailScreen(channelName: channel),
-      ),
-    );
+  void fetchChannels() async {
+    try {
+      final userEmail = await userLogic.getUserEmail();
+      final userRole = await userLogic.getUserRole();
+
+      QuerySnapshot<Map<String, dynamic>> snapshot;
+
+      if (userRole == 'admin') {
+        // Admin: Fetch all channels
+        snapshot = await channelLogic.firestore.collection('channels').get();
+      } else {
+        // User: Fetch channels where the user is a member
+        snapshot = await channelLogic.firestore
+            .collection('channels')
+            .where('members', arrayContains: userEmail)
+            .get();
+      }
+
+      setState(() {
+        channels = snapshot.docs.map((doc) {
+          return {
+            'channelId': doc.id,
+            'channelName': doc['name'],
+            'members': List<String>.from(doc['members'] ?? []),
+          };
+        }).toList();
+        isLoading = false; // Ensure loading is complete
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to fetch channels: $e')),
+        );
+        setState(() {
+          isLoading = false; // Ensure loading is complete even on error
+        });
+      }
+    }
   }
 
-  void navigateToChannelInfo(String channel) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ChannelInfoScreen(
-          channelName: channel,
-          onUpdateChannelName: (updatedName) {
-            setState(() {
-              int index = channels.indexOf(channel);
-              if (index != -1) {
-                channels[index] = updatedName;
-              }
-            });
-          },
+  void navigateToChannelInfo(Map<String, dynamic> channel) {
+    if (userRole == 'admin') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ChannelInfoScreenAdmin(
+            channelId: channel['channelId'],
+            channelName: channel['channelName'],
+            members: channel['members'],
+            onUpdateChannelName: (updatedName) {
+              setState(() {
+                final index = channels.indexWhere((c) => c['channelId'] == channel['channelId']);
+                if (index != -1) {
+                  channels[index]['channelName'] = updatedName;
+                }
+              });
+            },
+            onUpdateMembersList: (updatedMembers) {
+              setState(() {
+                final index = channels.indexWhere((c) => c['channelId'] == channel['channelId']);
+                if (index != -1) {
+                  channels[index]['members'] = updatedMembers;
+                }
+              });
+            },
+          ),
         ),
-      ),
-    );
+      );
+    } else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ChannelInfoScreen(
+            channelId: channel['channelId'],
+            channelName: channel['channelName'],
+            members: channel['members'],
+          ),
+        ),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Channels')),
-      body: ListView.builder(
-        itemCount: channels.length,
-        itemBuilder: (context, index) {
-          final String channel = channels[index];
-          return ListTile(
-            title: Text(
-              channel,
-              style: const TextStyle(fontSize: 20),
-            ),
-            onTap: () => navigateToChannelDetail(channel),
-            trailing: IconButton(
-              icon: const Icon(Icons.info_outline),
-              onPressed: () => navigateToChannelInfo(channel),
-            ),
-          );
-        },
+      appBar: AppBar(
+        title: const Text('Channels'),
       ),
-    );
-  }
-}
-
-class ChannelDetailScreen extends StatelessWidget {
-  final String channelName;
-
-  const ChannelDetailScreen({super.key, required this.channelName});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(channelName)),
-      body: Center(
-        child: Text(
-          'Welcome to $channelName!',
-          style: const TextStyle(fontSize: 25),
-        ),
-      ),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : ListView.builder(
+              itemCount: channels.length,
+              itemBuilder: (context, index) {
+                final channel = channels[index];
+                return ListTile(
+                  title: Text(
+                    channel['channelName'],
+                    style: const TextStyle(fontSize: 20),
+                  ),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ChannelMessagesScreen(
+                          channelId: channel['channelId'],
+                          channelName: channel['channelName'],
+                        ),
+                      ),
+                    );
+                  },
+                  trailing: IconButton(
+                    icon: const Icon(Icons.info_outline),
+                    onPressed: () => navigateToChannelInfo(channel),
+                  ),
+                );
+              },
+            ),
     );
   }
 }

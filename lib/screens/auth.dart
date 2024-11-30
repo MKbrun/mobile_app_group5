@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:mobile_app_group5/backend/admin/admin_checker.dart';
+import 'package:mobile_app_group5/backend/admin_backend/admin_checker.dart';
 import 'package:mobile_app_group5/screens/primaryNavigationScreen.dart';
 import 'package:mobile_app_group5/widgets/profile_image_picker.dart';
 
@@ -45,7 +45,7 @@ class _AuthScreenState extends State<AuthScreen> {
       });
 
       if (_isLogin) {
-        final userCredentials = await _firebase.signInWithEmailAndPassword(
+        await _firebase.signInWithEmailAndPassword(
             email: _enteredEmail, password: _enteredPassword);
       } else {
         final userCredentials = await _firebase.createUserWithEmailAndPassword(
@@ -62,10 +62,10 @@ class _AuthScreenState extends State<AuthScreen> {
             .getDownloadURL(); //Gets the URL of the image for later use in the app
 
         // Dynamically assign role using isAdmin
-      final adminChecker = AdminChecker();
-      final bool isAdmin = await adminChecker.isAdmin(_enteredEmail);
+        final adminChecker = AdminChecker();
+        final bool isAdmin = await adminChecker.isAdmin(_enteredEmail);
 
-      final role = isAdmin ? 'admin' : 'user';
+        final role = isAdmin ? 'admin' : 'user';
         FirebaseFirestore.instance
             .collection('users')
             .doc(userCredentials.user!.uid)
@@ -82,15 +82,18 @@ class _AuthScreenState extends State<AuthScreen> {
         MaterialPageRoute(builder: (context) => PrimaryNavigationScreen()),
       );
     } on FirebaseAuthException catch (error) {
-      ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(error.message ?? 'Authentication failed.'),
-        ),
-      );
-      setState(() {
-        _isAutheticating = false;
-      });
+      if (mounted) {
+        // Ensure the widget is still mounted
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(error.message ?? 'Authentication failed.'),
+          ),
+        );
+        setState(() {
+          _isAutheticating = false;
+        });
+      }
     }
   }
 
