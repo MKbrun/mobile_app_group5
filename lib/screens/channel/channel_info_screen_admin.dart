@@ -1,13 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_app_group5/backend/channel_backend/channel_logic.dart';
 
 class ChannelInfoScreen extends StatefulWidget {
+  final String channelId;
   final String channelName;
+  final List<String> members;
   final ValueChanged<String> onUpdateChannelName;
+  final ValueChanged<List<String>> onUpdateMembersList; // New callback for members
 
   const ChannelInfoScreen({
     super.key,
+    required this.channelId,
     required this.channelName,
+    required this.members,
     required this.onUpdateChannelName,
+    required this.onUpdateMembersList, // Pass the callback here
   });
 
   @override
@@ -17,34 +24,15 @@ class ChannelInfoScreen extends StatefulWidget {
 class _ChannelInfoScreenState extends State<ChannelInfoScreen> {
   late TextEditingController _channelNameController;
   late TextEditingController _emailController;
-
-  // Dummy user data
-  List<Map<String, String>> users = [
-    {'name': 'A', 'email': 'a@example.com'},
-    {'name': 'B', 'email': 'b@example.com'},
-    {'name': 'C', 'email': 'c@example.com'},
-    {'name': 'D', 'email': 'd@example.com'},
-    {'name': 'E', 'email': 'e@example.com'},
-  ];
-
-  final double _inputHeight = 50.0;
-  final double _buttonHeight = 40.0;
-  final double _buttonWidth = 80.0;
-  final double _maxWidth = 600.0;
-
-  final InputDecoration _textFieldDecoration = const InputDecoration(
-    border: OutlineInputBorder(),
-    hintStyle: TextStyle(fontSize: 15),
-    contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-  );
+  late List<String> members;
+  final ChannelLogic channelLogic = ChannelLogic();
 
   @override
   void initState() {
     super.initState();
     _channelNameController = TextEditingController(text: widget.channelName);
     _emailController = TextEditingController();
-
-    sortUsers();
+    members = List<String>.from(widget.members);
   }
 
   @override
@@ -54,160 +42,118 @@ class _ChannelInfoScreenState extends State<ChannelInfoScreen> {
     super.dispose();
   }
 
-  void saveUpdatedName() {
-    widget.onUpdateChannelName(_channelNameController.text);
-    Navigator.of(context).pop();
-  }
+  void saveUpdatedDetails() async {
+    final updatedName = _channelNameController.text.trim();
 
-  void addUserByEmail() {
-    final String email = _emailController.text.trim();
-    if (email.isNotEmpty) {
-      setState(() {
-        users.add({'name': email.split('@')[0], 'email': email});
-        sortUsers();
-      });
-      _emailController.clear();
+    try {
+      // Save updated channel name and members
+      await channelLogic.updateChannel(
+        channelId: widget.channelId,
+        name: updatedName,
+        members: members,
+      );
+      widget.onUpdateChannelName(updatedName); // Update the channel name in the parent screen
+      widget.onUpdateMembersList(members); // Update the members list in the parent screen
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$email added to ${widget.channelName}.')),
+        const SnackBar(content: Text('Channel updated successfully')),
+      );
+      Navigator.of(context).pop(); // Close the screen
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to update channel')),
       );
     }
   }
 
-  void sortUsers() {
-    users.sort((a, b) => a['name']!.compareTo(b['name']!));
+  void addMember() async {
+    final email = _emailController.text.trim();
+    if (email.isNotEmpty && !members.contains(email)) {
+      setState(() {
+        members.add(email);
+      });
+
+      try {
+        await channelLogic.updateChannel(
+          channelId: widget.channelId,
+          members: members,
+        );
+        widget.onUpdateMembersList(members); // Notify parent screen about member update
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$email added successfully')),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to add member')),
+        );
+      }
+      _emailController.clear();
+    }
   }
 
-  void confirmRemoveUser(int index) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        final user = users[index];
-        return AlertDialog(
-          title: const Text('Confirm Deletion'),
-          content: Text('Are you sure you want to remove ${user['name']}?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  users.removeAt(index);
-                });
-                Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('${user['name']} removed')),
-                );
-              },
-              child: const Text('Delete'),
-            ),
-          ],
+  void removeMember(String email) async {
+    if (members.contains(email)) {
+      setState(() {
+        members.remove(email);
+      });
+
+      try {
+        await channelLogic.updateChannel(
+          channelId: widget.channelId,
+          members: members,
         );
-      },
-    );
+        widget.onUpdateMembersList(members); // Notify parent screen about member update
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$email removed successfully')),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to remove member')),
+        );
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Info: ${widget.channelName}'),
-      ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: _maxWidth),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      flex: 3,
-                      child: SizedBox(
-                        height: _inputHeight,
-                        child: TextField(
-                          controller: _channelNameController,
-                          decoration: _textFieldDecoration.copyWith(
-                            hintText: 'Edit Channel Name',
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    SizedBox(
-                      height: _buttonHeight,
-                      width: _buttonWidth,
-                      child: ElevatedButton(
-                        onPressed: saveUpdatedName,
-                        child: const Text('Save'),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    Expanded(
-                      flex: 3,
-                      child: SizedBox(
-                        height: _inputHeight,
-                        child: TextField(
-                          controller: _emailController,
-                          decoration: _textFieldDecoration.copyWith(
-                            hintText: 'Add User by Email',
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    SizedBox(
-                      height: _buttonHeight,
-                      width: _buttonWidth,
-                      child: ElevatedButton(
-                        onPressed: addUserByEmail,
-                        child: const Text('Add'),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                const Text(
-                  'Users in Channel:',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 10),
-                Flexible(
-                  child: ListView.builder(
-                    itemCount: users.length,
-                    itemBuilder: (context, index) {
-                      final user = users[index];
-                      return Dismissible(
-                        key: Key(user['email']!),
-                        direction: DismissDirection.endToStart,
-                        confirmDismiss: (_) async {
-                          confirmRemoveUser(index);
-                          return false;
-                        },
-                        background: Container(
-                          color: Colors.red,
-                          alignment: Alignment.centerRight,
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: const Icon(Icons.delete, color: Colors.white),
-                        ),
-                        child: ListTile(
-                          title: Text(user['name']!),
-                          subtitle: Text(user['email']!),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
+        title: Text('Edit: ${widget.channelName}'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.save),
+            onPressed: saveUpdatedDetails,
           ),
+        ],
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            TextField(
+              controller: _channelNameController,
+              decoration: const InputDecoration(labelText: 'Channel Name'),
+            ),
+            const SizedBox(height: 20),
+            TextField(
+              controller: _emailController,
+              decoration: const InputDecoration(labelText: 'Add Member (Email)'),
+              onSubmitted: (_) => addMember(),
+            ),
+            const SizedBox(height: 10),
+            Expanded(
+              child: ListView(
+                children: members
+                    .map((email) => ListTile(
+                          title: Text(email),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.remove_circle),
+                            onPressed: () => removeMember(email),
+                          ),
+                        ))
+                    .toList(),
+              ),
+            ),
+          ],
         ),
       ),
     );

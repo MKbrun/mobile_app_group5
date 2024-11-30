@@ -39,11 +39,16 @@ class _AuthScreenState extends State<AuthScreen> {
 
     _form.currentState!.save();
 
+
     try {
       setState(() {
         _isAutheticating = true;
       });
 
+if (_isLogin) {
+        final userCredentials = await _firebase.signInWithEmailAndPassword(
+            email: _enteredEmail, password: _enteredPassword);
+      } else {
         final userCredentials = await _firebase.createUserWithEmailAndPassword(
             email: _enteredEmail, password: _enteredPassword);
 
@@ -71,6 +76,7 @@ class _AuthScreenState extends State<AuthScreen> {
           'image_url': imageURL,
           'role': role, // Assign role
         });
+      }
 
       Navigator.pushReplacement(
         context,
