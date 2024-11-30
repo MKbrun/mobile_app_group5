@@ -39,13 +39,12 @@ class _AuthScreenState extends State<AuthScreen> {
 
     _form.currentState!.save();
 
-
     try {
       setState(() {
         _isAutheticating = true;
       });
 
-if (_isLogin) {
+      if (_isLogin) {
         final userCredentials = await _firebase.signInWithEmailAndPassword(
             email: _enteredEmail, password: _enteredPassword);
       } else {
@@ -63,10 +62,10 @@ if (_isLogin) {
             .getDownloadURL(); //Gets the URL of the image for later use in the app
 
         // Dynamically assign role using isAdmin
-      final adminChecker = AdminChecker();
-      final bool isAdmin = await adminChecker.isAdmin(_enteredEmail);
+        final adminChecker = AdminChecker();
+        final bool isAdmin = await adminChecker.isAdmin(_enteredEmail);
 
-      final role = isAdmin ? 'admin' : 'user';
+        final role = isAdmin ? 'admin' : 'user';
         FirebaseFirestore.instance
             .collection('users')
             .doc(userCredentials.user!.uid)
@@ -221,6 +220,18 @@ if (_isLogin) {
           ),
         ),
       ),
+    );
+  }
+}
+
+// Logout function
+Future<void> logout(BuildContext context) async {
+  try {
+    await _firebase.signOut();
+    Navigator.of(context).pushReplacementNamed('/auth');
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Error logging out: $e')),
     );
   }
 }
