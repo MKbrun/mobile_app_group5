@@ -5,7 +5,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mobile_app_group5/backend/admin_backend/admin_checker.dart';
-import 'package:mobile_app_group5/screens/primaryNavigationScreen.dart';
+import 'package:mobile_app_group5/screens/home_screen.dart';
 import 'package:mobile_app_group5/widgets/profile_image_picker.dart';
 import 'package:mobile_app_group5/themes/app_theme.dart';
 
@@ -81,7 +81,7 @@ class _AuthScreenState extends State<AuthScreen> {
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => PrimaryNavigationScreen()),
+        MaterialPageRoute(builder: (context) => HomeScreen()),
       );
     } on FirebaseAuthException catch (error) {
       if (mounted) {
@@ -304,18 +304,6 @@ class _AuthScreenState extends State<AuthScreen> {
           ),
         ),
       ),
-    );
-  }
-}
-
-// Logout function
-Future<void> logout(BuildContext context) async {
-  try {
-    await _firebase.signOut();
-    Navigator.of(context).pushReplacementNamed('/auth');
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Error logging out: $e')),
     );
   }
 }

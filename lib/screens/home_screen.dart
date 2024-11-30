@@ -12,7 +12,7 @@ class HomeScreen extends StatelessWidget {
     if (currentUser == null) {
       return {
         'username': '[[DEV]]',
-        'image_url': null, 
+        'image_url': null,
       };
     }
 
@@ -24,7 +24,7 @@ class HomeScreen extends StatelessWidget {
     if (userDoc.exists) {
       return {
         'username': userDoc.data()?['username'] ?? '[[DEV]]',
-        'image_url': userDoc.data()?['image_url'], 
+        'image_url': userDoc.data()?['image_url'],
       };
     } else {
       return {
@@ -65,12 +65,14 @@ class HomeScreen extends StatelessWidget {
                 CircleAvatar(
                   radius: 50,
                   backgroundColor: Colors.grey,
-                  backgroundImage: imageUrl != null ? NetworkImage(imageUrl) : null,
+                  backgroundImage:
+                      imageUrl != null ? NetworkImage(imageUrl) : null,
                 ),
                 const SizedBox(height: 20),
                 Text(
                   username,
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      fontSize: 24, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 40),
                 ElevatedButton(
@@ -78,12 +80,12 @@ class HomeScreen extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => const PrimaryNavigationScreen()),
+                          builder: (context) =>
+                              const PrimaryNavigationScreen()),
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        Theme.of(context).colorScheme.secondary, 
+                    backgroundColor: Theme.of(context).colorScheme.secondary,
                     shape: const CircleBorder(),
                     padding: const EdgeInsets.all(30),
                   ),

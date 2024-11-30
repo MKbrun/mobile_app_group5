@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
-import 'auth.dart'; // Import the logout function
+import 'package:firebase_auth/firebase_auth.dart';
+import 'auth.dart'; // Import Auth functionality if needed
 import 'settings_screen.dart'; // Import SettingsScreen
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
+
+  Future<void> _logout(BuildContext context) async {
+    await FirebaseAuth.instance.signOut();
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (context) => const AuthScreen()),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +34,7 @@ class ProfileScreen extends StatelessWidget {
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: () async {
-                await logout(context); // Call logout function
+                await _logout(context); // Call logout function
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
