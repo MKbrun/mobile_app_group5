@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_chat_ui/flutter_chat_ui.dart';
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
@@ -107,36 +108,43 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final image = await picker.pickImage(source: ImageSource.gallery);
+  final picker = ImagePicker();
+  final image = await picker.pickImage(source: ImageSource.gallery);
 
-    if (image != null) {
-      final file = File(image.path);
-      final fileSize = file.lengthSync();
+  if (image != null) {
+    final file = File(image.path);
+    final fileSize = file.lengthSync();
 
-      final message = {
-        'chatId': chatId,
+    final storageRef = FirebaseStorage.instance
+        .ref()
+        .child('private_message_images')
+        .child('$chatId-${DateTime.now().millisecondsSinceEpoch}.jpg');
+    await storageRef.putFile(file);
+
+    final imageUrl = await storageRef.getDownloadURL();
+
+    final message = {
+      'chatId': chatId,
+      'senderId': _currentUser.uid,
+      'type': 'image',
+      'name': image.name,
+      'size': fileSize,
+      'uri': imageUrl,
+      'timestamp': FieldValue.serverTimestamp(),
+    };
+
+    await FirebaseFirestore.instance.collection('private_chat_messages').add(message);
+
+    await FirebaseFirestore.instance.collection('private_chats').doc(chatId).set({
+      'UserIds': [_currentUser.uid, widget.userId],
+      'lastMessage': {
         'senderId': _currentUser.uid,
-        'type': 'image',
-        'name': image.name,
-        'size': fileSize,
-        'uri': image.path,
+        'text': '[Image]',
         'timestamp': FieldValue.serverTimestamp(),
-      };
-
-      await FirebaseFirestore.instance.collection('private_chat_messages').add(message);
-
-      
-      await FirebaseFirestore.instance.collection('private_chats').doc(chatId).set({
-        'UserIds': [_currentUser.uid, widget.userId],
-        'lastMessage': {
-          'senderId': _currentUser.uid,
-          'text': '[Image]',
-          'timestamp': FieldValue.serverTimestamp(),
-        },
-      }, SetOptions(merge: true));
-    }
+      },
+    }, SetOptions(merge: true));
   }
+}
 
   @override
   Widget build(BuildContext context) {
