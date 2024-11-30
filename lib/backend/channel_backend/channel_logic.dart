@@ -8,18 +8,16 @@ class ChannelLogic {
 
   Future<void> createChannel({
     required String name,
-    required String description,
     required List<String> members,
   }) async {
     try {
       final channelCollection = firestore.collection('channels');
 
       // Log the data to be added
-      print('Creating channel with data: name=$name, description=$description, members=$members');
+      print('Creating channel with data: name=$name, members=$members');
 
       final channelData = {
         'name': name,
-        'description': description,
         'members': members,
       };
 
@@ -39,6 +37,27 @@ class ChannelLogic {
       print('Welcome message added to channel: ${channelDocRef.id}');
     } catch (e) {
       print('Error creating channel: $e');
+      rethrow;
+    }
+  }
+
+  // Method to update a channel
+  Future<void> updateChannel({
+    required String channelId,
+    String? name,
+    String? description,
+    List<String>? members,
+  }) async {
+    try {
+      final channelDocRef = firestore.collection('channels').doc(channelId);
+
+      final Map<String, dynamic> updates = {};
+      if (name != null) updates['name'] = name;
+      if (members != null) updates['members'] = members;
+
+      await channelDocRef.update(updates);
+    } catch (e) {
+      print('Error updating channel: $e');
       rethrow;
     }
   }

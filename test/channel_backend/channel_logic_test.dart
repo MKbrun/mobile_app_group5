@@ -41,7 +41,6 @@ void main() {
     // Act
     await channelLogic.createChannel(
       name: 'Team Updates',
-      description: 'Daily standups',
       members: ['user1', 'user2'],
     );
 
@@ -51,7 +50,6 @@ void main() {
       predicate<Map<String, dynamic>>((channel) {
         final members = channel['members'] as List<String>;
         return channel['name'] == 'Team Updates' &&
-            channel['description'] == 'Daily standups' &&
             ['user1', 'user2'].every((member) => members.contains(member));
       }),
     ))).called(1);
