@@ -27,7 +27,6 @@ class _PrimaryNavigationScreenState extends State<PrimaryNavigationScreen>
   late Animation<Offset> _offsetAnimation;
 
   final List<Widget> _screens = [
-    ChannelScreen(),
     const ContactsScreen(),
     const ChannelScreen(),
     const CalendarScreen(),
@@ -123,14 +122,14 @@ class _PrimaryNavigationScreenState extends State<PrimaryNavigationScreen>
               context,
               icon: Icons.contacts,
               label: 'Contacts',
-              index: 1,
+              index: 0,
             ),
             _divider(),
             _buildNavItem(
               context,
               icon: Icons.layers,
               label: 'Channels',
-              index: 0,
+              index: 1,
             ),
             _divider(),
             // Multi-purpose button

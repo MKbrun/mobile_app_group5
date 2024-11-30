@@ -30,7 +30,8 @@ class AppTheme {
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: blueColor, // Default blue color for elevated buttons
-        foregroundColor: Color.fromARGB(255, 242, 244, 247), // White text on buttons
+        foregroundColor:
+            Color.fromARGB(255, 242, 244, 247), // White text on buttons
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
         ),
