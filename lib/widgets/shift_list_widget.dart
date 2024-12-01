@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
 import 'shift_card_widget.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ShiftListWidget extends StatelessWidget {
   final List<Map<String, dynamic>> shifts;
   final Function(int) onTakeShift;
 
-  const ShiftListWidget({
-    super.key,
+  // Fetch the current user's ID
+  final String? currentUserId = FirebaseAuth.instance.currentUser?.uid;
+
+  ShiftListWidget({
+    Key? key,
     required this.shifts,
     required this.onTakeShift,
-  });
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -19,6 +23,8 @@ class ShiftListWidget extends StatelessWidget {
         return ShiftCardWidget(
           shift: shifts[index],
           onTakeShift: () => onTakeShift(index),
+          currentUserId:
+              currentUserId, // Pass the required currentUserId argument here
         );
       },
     );

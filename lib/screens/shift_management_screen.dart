@@ -44,33 +44,67 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
 
   void _fetchShifts() async {
     try {
-      QuerySnapshot snapshot = await firestore
+      DateTime startOfDay =
+          DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
+      DateTime endOfDay = startOfDay.add(const Duration(days: 1));
+
+      QuerySnapshot usersSnapshot = await firestore.collection('users').get();
+      Map<String, String> userIdToUsername = {};
+
+      for (var userDoc in usersSnapshot.docs) {
+        Map<String, dynamic>? userData =
+            userDoc.data() as Map<String, dynamic>?;
+
+        if (userData != null && userData.containsKey('username')) {
+          userIdToUsername[userDoc.id] = userData['username'];
+        } else {
+          // Handle users without a username field
+          userIdToUsername[userDoc.id] = "Unknown";
+        }
+      }
+
+      QuerySnapshot shiftsSnapshot = await firestore
           .collection('shifts')
-          .where('date',
-              isEqualTo: Timestamp.fromDate(DateTime(
-                  _selectedDate.year, _selectedDate.month, _selectedDate.day)))
+          .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+          .where('date', isLessThan: Timestamp.fromDate(endOfDay))
           .get();
 
+      List<Map<String, dynamic>> fetchedShifts = [];
+
+      for (var doc in shiftsSnapshot.docs) {
+        String? assignedUserId = doc['assignedUserId'] as String?;
+
+        String assignedUsername =
+            "Unassigned"; // Default value if no user is assigned
+
+        // If there's an assigned user, use the user map to get their username
+        if (assignedUserId != null && assignedUserId.isNotEmpty) {
+          assignedUsername = userIdToUsername[assignedUserId] ?? "Unknown";
+        }
+
+        // Add the shift data to the list
+        fetchedShifts.add({
+          "id": doc.id,
+          "date": (doc['date'] != null)
+              ? (doc['date'] as Timestamp).toDate()
+              : null,
+          "startTime": (doc['startTime'] != null)
+              ? (doc['startTime'] as Timestamp).toDate()
+              : null,
+          "endTime": (doc['endTime'] != null)
+              ? (doc['endTime'] as Timestamp).toDate()
+              : null,
+          "assignedUserId": assignedUserId ?? '',
+          "assignedUsername":
+              assignedUsername, // Add the username to shift data
+          "createdBy": doc['createdBy'] ?? '',
+          "available": assignedUserId == null || assignedUserId.isEmpty,
+          "title": doc['title'] ?? "No Title",
+        });
+      }
+
       setState(() {
-        shifts = snapshot.docs
-            .map((doc) => {
-                  "id": doc.id,
-                  "date": (doc['date'] != null)
-                      ? (doc['date'] as Timestamp).toDate()
-                      : null,
-                  "startTime": (doc['startTime'] != null)
-                      ? (doc['startTime'] as Timestamp).toDate()
-                      : null,
-                  "endTime": (doc['endTime'] != null)
-                      ? (doc['endTime'] as Timestamp).toDate()
-                      : null,
-                  "assignedUserId": doc['assignedUserId'],
-                  "createdBy": doc['createdBy'],
-                  "available": doc['assignedUserId'] == null ||
-                      doc['assignedUserId'].isEmpty,
-                  "title": doc['title'] ?? "No Title"
-                })
-            .toList();
+        shifts = fetchedShifts;
       });
     } catch (e) {
       print('Error fetching shifts: $e');
