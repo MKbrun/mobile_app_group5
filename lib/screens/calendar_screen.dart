@@ -1,3 +1,5 @@
+// Updated CalendarScreen to Show Shifts for Each Day
+
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -26,21 +28,24 @@ class _CalendarScreenState extends State<CalendarScreen> {
       QuerySnapshot snapshot = await firestore.collection('shifts').get();
       Map<DateTime, List<Map<String, dynamic>>> shiftMap = {};
       for (var doc in snapshot.docs) {
-        DateTime shiftDate = (doc['startTime'] != null)
-            ? (doc['startTime'] as Timestamp).toDate()
-            : DateTime.now();
-        DateTime dateOnly =
-            DateTime(shiftDate.year, shiftDate.month, shiftDate.day);
-        if (shiftMap[dateOnly] == null) {
-          shiftMap[dateOnly] = [];
+        if (doc['date'] != null) {
+          DateTime shiftDate = (doc['date'] as Timestamp).toDate();
+          DateTime dateOnly =
+              DateTime(shiftDate.year, shiftDate.month, shiftDate.day);
+          if (shiftMap[dateOnly] == null) {
+            shiftMap[dateOnly] = [];
+          }
+          shiftMap[dateOnly]!.add({
+            "startTime": (doc['startTime'] != null)
+                ? (doc['startTime'] as Timestamp).toDate()
+                : null,
+            "endTime": (doc['endTime'] != null)
+                ? (doc['endTime'] as Timestamp).toDate()
+                : null,
+            "assignedUserId": doc['assignedUserId'],
+            "title": doc['title'] ?? "No Title",
+          });
         }
-        shiftMap[dateOnly]!.add({
-          "startTime": shiftDate,
-          "endTime": (doc['endTime'] != null)
-              ? (doc['endTime'] as Timestamp).toDate()
-              : null,
-          "assignedUserId": doc['assignedUserId'],
-        });
       }
       setState(() {
         _shiftEvents = shiftMap;

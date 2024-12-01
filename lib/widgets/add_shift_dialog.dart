@@ -1,3 +1,6 @@
+// Updated AddShiftDialog to Collect Necessary Shift Data
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -10,6 +13,7 @@ class _AddShiftDialogState extends State<AddShiftDialog> {
   TimeOfDay? startTime;
   TimeOfDay? endTime;
   String selectedUser = "Unassigned";
+  TextEditingController _titleController = TextEditingController();
 
   // Function to format TimeOfDay to 24-hour HH:mm format
   String _formatTimeOfDay(TimeOfDay? time) {
@@ -127,6 +131,11 @@ class _AddShiftDialogState extends State<AddShiftDialog> {
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          // Shift Title
+          TextField(
+            controller: _titleController,
+            decoration: InputDecoration(labelText: "Shift Title"),
+          ),
           // Start Time Picker
           ListTile(
             title: const Text("Start Time"),
@@ -148,14 +157,18 @@ class _AddShiftDialogState extends State<AddShiftDialog> {
           // Dropdown for Assigning User (Not pressable now, just for display)
           DropdownButton<String>(
             value: selectedUser,
-            items: <String>['Unassigned', 'Alice', 'Bob', 'Charlie']
+            items: <String>["Unassigned", "Alice", "Bob", "Charlie"]
                 .map((String value) {
               return DropdownMenuItem<String>(
                 value: value,
                 child: Text(value),
               );
             }).toList(),
-            onChanged: null, // Disable interaction for now
+            onChanged: (String? newValue) {
+              setState(() {
+                selectedUser = newValue ?? "Unassigned";
+              });
+            },
           ),
         ],
       ),
@@ -170,18 +183,16 @@ class _AddShiftDialogState extends State<AddShiftDialog> {
           child: const Text("Add Shift"),
           onPressed: () {
             if (startTime != null && endTime != null) {
-              // Calculate duration
-              final startInMinutes = startTime!.hour * 60 + startTime!.minute;
-              final endInMinutes = endTime!.hour * 60 + endTime!.minute;
-              final durationInHours =
-                  ((endInMinutes - startInMinutes) / 60).toStringAsFixed(1);
-
               // Create new shift data
               Map<String, dynamic> newShift = {
-                "time":
-                    "${_formatTimeOfDay(startTime)} - ${_formatTimeOfDay(endTime)} (${durationInHours} hrs)",
-                "available": true,
-                "user": selectedUser,
+                "date": DateTime.now(), // You can pass the actual date selected
+                "startTime": Timestamp.fromDate(DateTime.now().add(Duration(
+                    hours: startTime!.hour, minutes: startTime!.minute))),
+                "endTime": Timestamp.fromDate(DateTime.now().add(
+                    Duration(hours: endTime!.hour, minutes: endTime!.minute))),
+                "assignedUserId":
+                    selectedUser == "Unassigned" ? "" : selectedUser,
+                "title": _titleController.text.trim(),
               };
               Navigator.of(context).pop(newShift);
             } else {

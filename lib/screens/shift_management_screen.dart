@@ -1,3 +1,5 @@
+// Updated ShiftManagementScreen to Integrate Firestore Backend for Shifts
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -44,17 +46,18 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
     try {
       QuerySnapshot snapshot = await firestore
           .collection('shifts')
-          .where('startTime',
-              isGreaterThanOrEqualTo: Timestamp.fromDate(_selectedDate))
-          .where('startTime',
-              isLessThan:
-                  Timestamp.fromDate(_selectedDate.add(Duration(days: 1))))
+          .where('date',
+              isEqualTo: Timestamp.fromDate(DateTime(
+                  _selectedDate.year, _selectedDate.month, _selectedDate.day)))
           .get();
 
       setState(() {
         shifts = snapshot.docs
             .map((doc) => {
                   "id": doc.id,
+                  "date": (doc['date'] != null)
+                      ? (doc['date'] as Timestamp).toDate()
+                      : null,
                   "startTime": (doc['startTime'] != null)
                       ? (doc['startTime'] as Timestamp).toDate()
                       : null,
@@ -79,7 +82,8 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
 
   void _addShift(Map<String, dynamic> newShift) async {
     try {
-      await firestore.collection('shifts').add({
+      DocumentReference docRef = await firestore.collection('shifts').add({
+        "date": newShift["date"],
         "startTime": newShift["startTime"],
         "endTime": newShift["endTime"],
         "assignedUserId": newShift["assignedUserId"],
@@ -88,6 +92,10 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
         "tradeRequestedBy": "",
         "tradeTargetUserId": "",
         "title": newShift["title"],
+      });
+
+      await firestore.collection('shifts').doc(docRef.id).update({
+        "shiftId": docRef.id,
       });
       _fetchShifts();
     } catch (e) {
