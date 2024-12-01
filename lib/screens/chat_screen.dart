@@ -7,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:io';
+import 'package:mobile_app_group5/themes/app_theme.dart';
 
 class ChatScreen extends StatefulWidget {
   final String userName;
@@ -202,15 +203,49 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Chat with ${widget.userName}')),
+      appBar: AppBar(title: Text('Chat with ${widget.userName}'),
+                     backgroundColor: AppTheme.blueColor,),
+      
       body: Column(
         children: [
           Expanded(
             child: Chat(
+              theme: DefaultChatTheme(
+                //Background
+                backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+
+                // Outgoing Message 
+                primaryColor: Theme.of(context).colorScheme.secondary, // Bubble Color
+                sentMessageBodyTextStyle: TextStyle(
+                  color: AppTheme.White, // Text Color
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  height: 1.5,
+                ),
+
+                // Incoming Message 
+                secondaryColor: Theme.of(context).colorScheme.secondary, // Bubble Color
+                receivedMessageBodyTextStyle: TextStyle(
+                  color: AppTheme.White, // Text Color
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  height: 1.5,
+                ),
+
+                // Input Field 
+                inputBackgroundColor: Theme.of(context).colorScheme.surface,
+                inputTextColor: Theme.of(context).colorScheme.onSurface,
+                inputBorderRadius: BorderRadius.circular(16),
+                inputTextStyle: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
+                  fontSize: 16,
+                ),
+              ),
               messages: _messages,
               onSendPressed: (types.PartialText message) {
                 _sendMessage(message.text);
               },
+              
               user: types.User(id: _currentUser.uid),
               imageMessageBuilder: _buildImageMessage,
               customBottomWidget: Padding(

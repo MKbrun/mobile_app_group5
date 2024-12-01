@@ -104,7 +104,6 @@ class _ContactsScreenState extends State<ContactsScreen> {
       body: Column(
         children: [
           Container(
-            color: Colors.white,
             padding:
                 const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             child: TextField(
@@ -149,7 +148,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
                     final lastMessage = contact['lastMessage'];
 
                     final backgroundColor =
-                        index % 2 == 0 ? const Color.fromARGB(255, 250, 250, 250) : Colors.white;
+                        index % 2 == 0 ? Theme.of(context).colorScheme.tertiary : Theme.of(context).colorScheme.tertiaryContainer;
 
                     return Container(
                       color: backgroundColor,

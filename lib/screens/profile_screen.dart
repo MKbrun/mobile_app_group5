@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'auth.dart';
 import 'settings_screen.dart';
 import 'package:mobile_app_group5/themes/app_theme.dart';
+import 'package:mobile_app_group5/main.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -55,7 +56,6 @@ class ProfileScreen extends StatelessWidget {
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 22,
-            color: Colors.white,
           ),
         ),
         centerTitle: true,
@@ -87,14 +87,14 @@ class ProfileScreen extends StatelessWidget {
               Expanded(
                 flex: 1,
                 child: Container(
-                  color: Theme.of(context).colorScheme.primary,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       CircleAvatar(
                         radius: 50,
-                        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+                        backgroundColor:
+                            Theme.of(context).appBarTheme.backgroundColor,
                         backgroundImage:
                             imageUrl != null ? NetworkImage(imageUrl) : null,
                       ),
@@ -104,7 +104,6 @@ class ProfileScreen extends StatelessWidget {
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: Colors.black,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -112,7 +111,6 @@ class ProfileScreen extends StatelessWidget {
                         email,
                         style: const TextStyle(
                           fontSize: 16,
-                          color: Colors.grey,
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -123,25 +121,27 @@ class ProfileScreen extends StatelessWidget {
               Expanded(
                 flex: 1,
                 child: Container(
-                  color: Theme.of(context).scaffoldBackgroundColor,
-                  padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 16),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 40, horizontal: 16),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       ElevatedButton(
                         onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const SettingsScreen(),
-                            ),
+                          final isDarkMode =
+                              Theme.of(context).brightness == Brightness.dark;
+
+                          MyApp.of(context)?.setThemeMode(
+                            isDarkMode ? ThemeMode.light : ThemeMode.dark,
                           );
+
+                          RestartableApp.restartApp(context);
                         },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.blueColor,
-                          fixedSize: const Size(150, 50),
+                        child: Text(
+                          Theme.of(context).brightness == Brightness.dark
+                              ? 'Switch to Light Mode'
+                              : 'Switch to Dark Mode',
                         ),
-                        child: const Text('Settings'),
                       ),
                       ElevatedButton(
                         onPressed: () async {
