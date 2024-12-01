@@ -1,8 +1,6 @@
-// Updated AddShiftDialog to Collect Necessary Shift Data
-
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AddShiftDialog extends StatefulWidget {
   @override
@@ -14,6 +12,37 @@ class _AddShiftDialogState extends State<AddShiftDialog> {
   TimeOfDay? endTime;
   String selectedUser = "Unassigned";
   TextEditingController _titleController = TextEditingController();
+  List<Map<String, dynamic>> users = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUsers();
+  }
+
+  // Fetch users from Firestore and handle missing fields
+  void _fetchUsers() async {
+    try {
+      QuerySnapshot snapshot =
+          await FirebaseFirestore.instance.collection('users').get();
+      setState(() {
+        users = snapshot.docs.map((doc) {
+          final data = doc.data()
+              as Map<String, dynamic>?; // Casting to Map<String, dynamic>?
+          return {
+            "id": doc.id,
+            "username": data != null && data.containsKey('username')
+                ? data['username']
+                : 'Unknown',
+          };
+        }).toList();
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching users: $e')),
+      );
+    }
+  }
 
   // Function to format TimeOfDay to 24-hour HH:mm format
   String _formatTimeOfDay(TimeOfDay? time) {
@@ -154,16 +183,21 @@ class _AddShiftDialogState extends State<AddShiftDialog> {
             ),
             onTap: () => _showCupertinoTimePicker(context, false),
           ),
-          // Dropdown for Assigning User (Not pressable now, just for display)
+          // Dropdown for Assigning User
           DropdownButton<String>(
             value: selectedUser,
-            items: <String>["Unassigned", "Alice", "Bob", "Charlie"]
-                .map((String value) {
-              return DropdownMenuItem<String>(
-                value: value,
-                child: Text(value),
-              );
-            }).toList(),
+            items: [
+              const DropdownMenuItem<String>(
+                value: "Unassigned",
+                child: Text("Unassigned"),
+              ),
+              ...users.map((user) {
+                return DropdownMenuItem<String>(
+                  value: user["id"],
+                  child: Text(user["username"]),
+                );
+              }).toList(),
+            ],
             onChanged: (String? newValue) {
               setState(() {
                 selectedUser = newValue ?? "Unassigned";
@@ -185,7 +219,8 @@ class _AddShiftDialogState extends State<AddShiftDialog> {
             if (startTime != null && endTime != null) {
               // Create new shift data
               Map<String, dynamic> newShift = {
-                "date": DateTime.now(), // You can pass the actual date selected
+                "date": DateTime
+                    .now(), // This should be updated to the selected date from widget
                 "startTime": Timestamp.fromDate(DateTime.now().add(Duration(
                     hours: startTime!.hour, minutes: startTime!.minute))),
                 "endTime": Timestamp.fromDate(DateTime.now().add(
