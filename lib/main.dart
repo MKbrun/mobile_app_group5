@@ -25,36 +25,25 @@ class App extends StatelessWidget {
     return MaterialApp(
       title: 'FlutterChat',
       theme: AppTheme.lightTheme, // Apply the theme from the theme file
-      initialRoute: '/', // Set initial route to match current behavior
-      routes: {
-        '/': (context) => StreamBuilder<User?>(
-              stream: FirebaseAuth.instance.authStateChanges(),
-              builder: (context, snapshot) {
-                // Show loading screen if waiting for data
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
-                    child: CircularProgressIndicator(),
-                  );
-                }
+      home: StreamBuilder<User?>(
+        stream: FirebaseAuth.instance.authStateChanges(),
+        builder: (context, snapshot) {
+          // Show loading screen if waiting for data
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
 
-                // If user data exists, show home screen
-                if (snapshot.hasData) {
-                  return HomeScreen();
-                }
+          // If user data exists, show home screen
+          if (snapshot.hasData) {
+            return HomeScreen();
+          }
 
-                // Otherwise, show login screen
-                return AuthScreen();
-              },
-            ),
-        '/auth': (context) => AuthScreen(),
-        '/home': (context) => HomeScreen(),
-      },
-      onUnknownRoute: (settings) {
-        // Fallback for undefined routes
-        return MaterialPageRoute(
-          builder: (context) => AuthScreen(),
-        );
-      },
+          // Otherwise, show login screen
+          return AuthScreen(); // Replace with LoginScreen if available
+        },
+      ),
     );
   }
 }
