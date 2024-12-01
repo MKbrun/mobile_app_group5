@@ -1,7 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:mobile_app_group5/widgets/add_shift_dialog.dart';
-import 'package:mobile_app_group5/widgets/shift_list_widget.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mobile_app_group5/widgets/date_picker_widget.dart';
+import 'package:mobile_app_group5/widgets/shift_list_widget.dart';
+import 'package:mobile_app_group5/widgets/add_shift_dialog.dart';
 
 class ShiftManagementScreen extends StatefulWidget {
   final DateTime selectedDate;
@@ -13,26 +15,102 @@ class ShiftManagementScreen extends StatefulWidget {
 }
 
 class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
-  late DateTime _selectedDate;
-  bool _isAdmin = true; // Hardcoded variable to simulate admin or user roles
+  final FirebaseFirestore firestore = FirebaseFirestore.instance;
+  final User? currentUser = FirebaseAuth.instance.currentUser;
 
-  // Dummy data for shifts
-  List<Map<String, dynamic>> shifts = [
-    {"time": "08:00 - 12:00", "available": true, "user": "Alice"},
-    {"time": "12:00 - 16:00", "available": false, "user": "Bob"},
-    {"time": "16:00 - 20:00", "available": true, "user": "Charlie"},
-  ];
+  late DateTime _selectedDate;
+  bool _isAdmin = false;
+  List<Map<String, dynamic>> shifts = [];
 
   @override
   void initState() {
     super.initState();
     _selectedDate = widget.selectedDate;
+    _checkAdminStatus();
+    _fetchShifts();
   }
 
-  void _addShift(Map<String, dynamic> newShift) {
-    setState(() {
-      shifts.add(newShift);
-    });
+  void _checkAdminStatus() async {
+    DocumentSnapshot userSnapshot =
+        await firestore.collection('users').doc(currentUser?.uid).get();
+    if (userSnapshot.exists) {
+      setState(() {
+        _isAdmin = userSnapshot['role'] == 'admin';
+      });
+    }
+  }
+
+  void _fetchShifts() async {
+    try {
+      QuerySnapshot snapshot = await firestore
+          .collection('shifts')
+          .where('startTime',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(_selectedDate))
+          .where('startTime',
+              isLessThan:
+                  Timestamp.fromDate(_selectedDate.add(Duration(days: 1))))
+          .get();
+
+      setState(() {
+        shifts = snapshot.docs
+            .map((doc) => {
+                  "id": doc.id,
+                  "startTime": (doc['startTime'] != null)
+                      ? (doc['startTime'] as Timestamp).toDate()
+                      : null,
+                  "endTime": (doc['endTime'] != null)
+                      ? (doc['endTime'] as Timestamp).toDate()
+                      : null,
+                  "assignedUserId": doc['assignedUserId'],
+                  "createdBy": doc['createdBy'],
+                  "available": doc['assignedUserId'] == null ||
+                      doc['assignedUserId'].isEmpty,
+                  "title": doc['title'] ?? "No Title"
+                })
+            .toList();
+      });
+    } catch (e) {
+      print('Error fetching shifts: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching shifts: $e')),
+      );
+    }
+  }
+
+  void _addShift(Map<String, dynamic> newShift) async {
+    try {
+      await firestore.collection('shifts').add({
+        "startTime": newShift["startTime"],
+        "endTime": newShift["endTime"],
+        "assignedUserId": newShift["assignedUserId"],
+        "createdBy": currentUser?.uid,
+        "isTradeApproved": false,
+        "tradeRequestedBy": "",
+        "tradeTargetUserId": "",
+        "title": newShift["title"],
+      });
+      _fetchShifts();
+    } catch (e) {
+      print('Error adding shift: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error adding shift: $e')),
+      );
+    }
+  }
+
+  void _takeShift(int index) async {
+    String shiftId = shifts[index]["id"];
+    try {
+      await firestore.collection('shifts').doc(shiftId).update({
+        "assignedUserId": currentUser?.uid,
+      });
+      _fetchShifts();
+    } catch (e) {
+      print('Error taking shift: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error taking shift: $e')),
+      );
+    }
   }
 
   @override
@@ -49,6 +127,7 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
               setState(() {
                 _selectedDate = date;
               });
+              _fetchShifts();
             },
           ),
           if (_isAdmin)
@@ -71,10 +150,9 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
             child: ShiftListWidget(
               shifts: shifts,
               onTakeShift: (index) {
-                setState(() {
-                  shifts[index]["user"] = "Current User";
-                  shifts[index]["available"] = false;
-                });
+                if (shifts[index]["available"]) {
+                  _takeShift(index);
+                }
               },
             ),
           ),
