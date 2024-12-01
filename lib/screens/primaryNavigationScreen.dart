@@ -38,12 +38,12 @@ class _PrimaryNavigationScreenState extends State<PrimaryNavigationScreen>
 
     // Initialize the animation controller with a quicker duration
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 100), // Adjusted duration
+      duration: const Duration(milliseconds: 50), // Adjusted duration
       vsync: this,
     );
 
     _offsetAnimation = Tween<Offset>(
-      begin: const Offset(0, 1), // Start from bottom
+      begin: const Offset(0, 2), // Start from bottom
       end: Offset.zero, // End at original position
     ).animate(_animationController);
   }
@@ -149,7 +149,7 @@ class _PrimaryNavigationScreenState extends State<PrimaryNavigationScreen>
         onTap: () => _onTabTapped(index),
         child: Container(
           decoration: BoxDecoration(
-            color: isSelected ? AppTheme.darkBlueColor : AppTheme.blueColor,
+            color: isSelected ? AppTheme.blueColor : AppTheme.blueColor,
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -185,7 +185,7 @@ class _PrimaryNavigationScreenState extends State<PrimaryNavigationScreen>
         child: Container(
           decoration: BoxDecoration(
             color: _selectedNavItem == 3
-                ? AppTheme.darkBlueColor
+                ? AppTheme.blueColor
                 : AppTheme.blueColor,
           ),
           child: Column(
@@ -227,77 +227,96 @@ class _PrimaryNavigationScreenState extends State<PrimaryNavigationScreen>
   }
 
   OverlayEntry _createOverlayEntry(Offset position, double width) {
-    return OverlayEntry(
-      builder: (context) => GestureDetector(
-        onTap: () {
-          // Dismiss the popup when tapping outside
-          _animationController.reverse().then((value) {
-            _overlayEntry.remove();
-            setState(() {
-              _isPopupOpen = false;
-              _selectedNavItem = -1;
-            });
+  Animation<double> fadeAnimation = Tween<double>(
+    begin: 0.0, 
+    end: 1.0,   
+  ).animate(
+    CurvedAnimation(
+      parent: _animationController,
+      curve: Interval(
+        0.5, 
+        1.0,
+        curve: Curves.easeIn,
+      ),
+    ),
+  );
+
+  return OverlayEntry(
+    builder: (context) => GestureDetector(
+      onTap: () {
+        // Dismiss the popup when tapping outside
+        _animationController.reverse().then((value) {
+          _overlayEntry.remove();
+          setState(() {
+            _isPopupOpen = false;
+            _selectedNavItem = -1;
           });
-        },
-        behavior: HitTestBehavior.translucent,
-        child: Material(
-          color: Colors.transparent,
-          child: Stack(
-            children: [
-              Positioned(
-                left: position.dx,
-                top: position.dy - 100, // Adjusted to position above the button
-                width: width,
-                child: SlideTransition(
-                  position: _offsetAnimation,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _buildPopupMenuItem(
-                        icon: Icons.calendar_today,
-                        label: 'Calendar',
-                        onTap: () {
-                          _animationController.reverse().then((value) {
-                            _overlayEntry.remove();
-                            setState(() {
-                              _currentIndex = 2; // CalendarScreen index
-                              _selectedNavItem = 2; // Highlight Calendar
-                              _isPopupOpen = false;
+        });
+      },
+      behavior: HitTestBehavior.translucent,
+      child: Material(
+        color: Colors.transparent,
+        child: Stack(
+          children: [
+            Positioned(
+              left: position.dx,
+              top: position.dy -100, // Align the menu with the button's top -100
+              width: width,
+              child: ClipRect(
+                child: FadeTransition(
+                  opacity: fadeAnimation,
+                  child: SlideTransition(
+                    position: _offsetAnimation,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildPopupMenuItem(
+                          icon: Icons.calendar_today,
+                          label: 'Calendar',
+                          onTap: () {
+                            _animationController.reverse().then((value) {
+                              _overlayEntry.remove();
+                              setState(() {
+                                _currentIndex = 2; // CalendarScreen index
+                                _selectedNavItem = 2; // Highlight Calendar
+                                _isPopupOpen = false;
+                              });
                             });
-                          });
-                        },
-                      ),
-                      _buildPopupMenuItem(
-                        icon: Icons.schedule,
-                        label: 'Shift Management',
-                        onTap: () {
-                          _animationController.reverse().then((value) {
-                            _overlayEntry.remove();
-                            setState(() {
-                              _selectedNavItem = -1;
-                              _isPopupOpen = false;
-                            });
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => ShiftManagementScreen(
-                                  selectedDate: DateTime.now(),
+                          },
+                        ),
+                        _buildPopupMenuItem(
+                          icon: Icons.schedule,
+                          label: 'Shift Management',
+                          onTap: () {
+                            _animationController.reverse().then((value) {
+                              _overlayEntry.remove();
+                              setState(() {
+                                _selectedNavItem = -1;
+                                _isPopupOpen = false;
+                              });
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ShiftManagementScreen(
+                                    selectedDate: DateTime.now(),
+                                  ),
                                 ),
-                              ),
-                            );
-                          });
-                        },
-                      ),
-                    ],
+                              );
+                            });
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildPopupMenuItem(
       {required IconData icon,
@@ -307,7 +326,7 @@ class _PrimaryNavigationScreenState extends State<PrimaryNavigationScreen>
       onTap: onTap,
       child: Container(
         alignment: Alignment.center,
-        padding: const EdgeInsets.symmetric(vertical: 12.0),
+        padding: const EdgeInsets.symmetric(vertical: 15.5),
         color: AppTheme.blueColor,
         child: Column(
           mainAxisSize: MainAxisSize.min,
