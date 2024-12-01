@@ -1,7 +1,7 @@
-// calendar_screen.dart
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:mobile_app_group5/screens/shift_management_screen.dart'; // Import the new screen
+import 'package:mobile_app_group5/screens/shift_management_screen.dart';
+import 'package:mobile_app_group5/themes/app_theme.dart'; 
 
 class CalendarScreen extends StatelessWidget {
   const CalendarScreen({super.key});
@@ -18,7 +18,19 @@ class CalendarScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Calendar')),
+      appBar: AppBar(
+        title: const Text(
+          'Calendar',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 22,
+            color: Colors.white, 
+          ),
+        ),
+        centerTitle: true,
+        backgroundColor: AppTheme.blueColor, 
+        elevation: 0, 
+      ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: TableCalendar(
@@ -37,7 +49,7 @@ class CalendarScreen extends StatelessWidget {
           calendarStyle: CalendarStyle(
             todayDecoration: BoxDecoration(
               color:
-                  Theme.of(context).colorScheme.secondary, // Using theme color
+                  Theme.of(context).colorScheme.secondary, 
               shape: BoxShape.circle,
             ),
             todayTextStyle: const TextStyle(color: Colors.white),
