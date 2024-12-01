@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_app_group5/themes/app_theme.dart';
+import 'package:mobile_app_group5/widgets/swap_request_button.dart';
 
 class ShiftCardWidget extends StatelessWidget {
   final Map<String, dynamic> shift;
   final VoidCallback onTakeShift;
+  final VoidCallback onSwapShift;
+  final VoidCallback onApproveSwap;
   final String? currentUserId;
 
   const ShiftCardWidget({
     Key? key,
     required this.shift,
     required this.onTakeShift,
+    required this.onSwapShift,
+    required this.onApproveSwap,
     required this.currentUserId,
   }) : super(key: key);
 
@@ -18,12 +23,19 @@ class ShiftCardWidget extends StatelessWidget {
     String assignedUsername = shift['assignedUsername'] ?? 'Unassigned';
     String assignedUserId = shift['assignedUserId'] ?? '';
     bool isAvailable = assignedUserId.isEmpty;
+    bool isSwapRequested = shift['tradeTargetUserId'] == currentUserId &&
+        shift['tradeRequestedBy'] !=
+            ''; // Check if this shift has a swap request for the current user
 
     String buttonText;
     VoidCallback? buttonAction;
     Color buttonColor;
 
-    if (isAvailable) {
+    if (isSwapRequested) {
+      buttonText = "Swap Requested";
+      buttonAction = onApproveSwap;
+      buttonColor = AppTheme.blueColor;
+    } else if (isAvailable) {
       buttonText = "Take Shift";
       buttonAction = onTakeShift;
       buttonColor = AppTheme.lightGreenColor;
@@ -33,9 +45,7 @@ class ShiftCardWidget extends StatelessWidget {
       buttonColor = Colors.grey;
     } else {
       buttonText = "Swap";
-      buttonAction = () {
-        // Implement swap logic later here
-      };
+      buttonAction = onSwapShift;
       buttonColor = AppTheme.blueColor;
     }
 

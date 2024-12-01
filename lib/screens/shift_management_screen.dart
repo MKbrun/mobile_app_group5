@@ -1,11 +1,11 @@
-// Updated ShiftManagementScreen to Integrate Firestore Backend for Shifts
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mobile_app_group5/widgets/date_picker_widget.dart';
 import 'package:mobile_app_group5/widgets/shift_list_widget.dart';
 import 'package:mobile_app_group5/widgets/add_shift_dialog.dart';
+import 'package:mobile_app_group5/widgets/swap_shift_dialog.dart';
+import 'package:mobile_app_group5/widgets/swap_approval_dialog.dart';
 
 class ShiftManagementScreen extends StatefulWidget {
   final DateTime selectedDate;
@@ -58,7 +58,6 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
         if (userData != null && userData.containsKey('username')) {
           userIdToUsername[userDoc.id] = userData['username'];
         } else {
-          // Handle users without a username field
           userIdToUsername[userDoc.id] = "Unknown";
         }
       }
@@ -74,15 +73,12 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
       for (var doc in shiftsSnapshot.docs) {
         String? assignedUserId = doc['assignedUserId'] as String?;
 
-        String assignedUsername =
-            "Unassigned"; // Default value if no user is assigned
+        String assignedUsername = "Unassigned";
 
-        // If there's an assigned user, use the user map to get their username
         if (assignedUserId != null && assignedUserId.isNotEmpty) {
           assignedUsername = userIdToUsername[assignedUserId] ?? "Unknown";
         }
 
-        // Add the shift data to the list
         fetchedShifts.add({
           "id": doc.id,
           "date": (doc['date'] != null)
@@ -95,11 +91,13 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
               ? (doc['endTime'] as Timestamp).toDate()
               : null,
           "assignedUserId": assignedUserId ?? '',
-          "assignedUsername":
-              assignedUsername, // Add the username to shift data
+          "assignedUsername": assignedUsername,
           "createdBy": doc['createdBy'] ?? '',
           "available": assignedUserId == null || assignedUserId.isEmpty,
           "title": doc['title'] ?? "No Title",
+          "tradeRequestedBy": doc['tradeRequestedBy'] ?? '',
+          "tradeTargetUserId": doc['tradeTargetUserId'] ?? '',
+          "isTradeApproved": doc['isTradeApproved'] ?? false,
         });
       }
 
@@ -116,14 +114,13 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
 
   void _addShift(Map<String, dynamic> newShift) async {
     try {
-      DateTime shiftDate =
-          _selectedDate; // Use the selected date from DatePicker
+      DateTime shiftDate = _selectedDate;
       DocumentReference docRef = await firestore.collection('shifts').add({
         "date": Timestamp.fromDate(DateTime(
           shiftDate.year,
           shiftDate.month,
           shiftDate.day,
-        )), // Set the date field to the selected date without time
+        )),
         "startTime": newShift["startTime"],
         "endTime": newShift["endTime"],
         "assignedUserId": newShift["assignedUserId"],
@@ -137,7 +134,7 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
       await firestore.collection('shifts').doc(docRef.id).update({
         "shiftId": docRef.id,
       });
-      _fetchShifts(); // Refresh the shifts to show the newly added shift
+      _fetchShifts();
     } catch (e) {
       print('Error adding shift: $e');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -158,6 +155,131 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error taking shift: $e')),
       );
+    }
+  }
+
+  void _swapShift(int index) async {
+    Map<String, dynamic> selectedShift = shifts[index];
+
+    List<Map<String, dynamic>> userShifts = shifts.where((shift) {
+      return shift['assignedUserId'] == currentUser?.uid;
+    }).toList();
+
+    if (userShifts.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('You have no shifts available for swapping')),
+      );
+      return;
+    }
+
+    Map<String, dynamic>? swapShift = await showDialog(
+      context: context,
+      builder: (context) => SwapShiftDialog(userShifts: userShifts),
+    );
+
+    if (swapShift != null) {
+      try {
+        await firestore.collection('shifts').doc(selectedShift['id']).update({
+          "tradeRequestedBy": currentUser?.uid,
+          "tradeTargetUserId": selectedShift['assignedUserId'],
+          "isTradeApproved": false,
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Swap request has been sent')),
+        );
+      } catch (e) {
+        print('Error initiating swap: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error initiating swap: $e')),
+        );
+      }
+    }
+  }
+
+  void _approveOrRejectSwap(int index) async {
+    Map<String, dynamic> selectedShift = shifts[index];
+
+    bool? approve = await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Swap Request"),
+        content: const Text("Do you want to approve this shift swap?"),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(false);
+            },
+            child: const Text("Reject"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop(true);
+            },
+            child: const Text("Approve"),
+          ),
+        ],
+      ),
+    );
+
+    if (approve == true) {
+      try {
+        // Update both shifts
+        String requestedById = selectedShift['tradeRequestedBy'];
+        String targetUserId = selectedShift['assignedUserId'];
+
+        // Swap assigned users
+        await firestore.collection('shifts').doc(selectedShift['id']).update({
+          "assignedUserId": requestedById,
+          "tradeRequestedBy": "",
+          "tradeTargetUserId": "",
+          "isTradeApproved": true,
+        });
+
+        // Find the requesting user's shift and update it as well
+        String requestedShiftId = shifts.firstWhere((shift) =>
+            shift['assignedUserId'] == requestedById &&
+            shift['tradeTargetUserId'] == targetUserId)['id'];
+        await firestore.collection('shifts').doc(requestedShiftId).update({
+          "assignedUserId": targetUserId,
+          "tradeRequestedBy": "",
+          "tradeTargetUserId": "",
+          "isTradeApproved": true,
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Shift swap approved successfully')),
+        );
+
+        // Refresh the shifts list
+        _fetchShifts();
+      } catch (e) {
+        print('Error approving swap: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error approving swap: $e')),
+        );
+      }
+    } else if (approve == false) {
+      // Reject the swap request
+      try {
+        await firestore.collection('shifts').doc(selectedShift['id']).update({
+          "tradeRequestedBy": "",
+          "tradeTargetUserId": "",
+          "isTradeApproved": false,
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Shift swap request rejected')),
+        );
+
+        // Refresh the shifts list
+        _fetchShifts();
+      } catch (e) {
+        print('Error rejecting swap: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error rejecting swap: $e')),
+        );
+      }
     }
   }
 
@@ -201,6 +323,12 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
                 if (shifts[index]["available"]) {
                   _takeShift(index);
                 }
+              },
+              onSwapShift: (index) {
+                _swapShift(index);
+              },
+              onApproveSwap: (index) {
+                _approveOrRejectSwap(index);
               },
             ),
           ),
