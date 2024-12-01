@@ -38,7 +38,7 @@ class _PrimaryNavigationScreenState extends State<PrimaryNavigationScreen>
 
     // Initialize the animation controller with a quicker duration
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 50), // Adjusted duration
+      duration: const Duration(milliseconds: 40), // Adjusted duration
       vsync: this,
     );
 
@@ -79,32 +79,9 @@ class _PrimaryNavigationScreenState extends State<PrimaryNavigationScreen>
             index: _currentIndex,
             children: _screens,
           ),
-
-          // Floating profile icon at the top-right
-          Positioned(
-            top: 40, // Adjust for the status bar
-            right: 16, // Padding from the right edge
-            child: GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const ProfileScreen(),
-                  ),
-                );
-              },
-              child: const CircleAvatar(
-                radius: 20,
-                backgroundColor: Colors.blue,
-                child: Icon(
-                  Icons.person,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ),
         ],
       ),
+
       bottomNavigationBar: Container(
         width: MediaQuery.of(context).size.width,
         height: 70, // Fixed height for the navigation bar
@@ -228,13 +205,13 @@ class _PrimaryNavigationScreenState extends State<PrimaryNavigationScreen>
 
   OverlayEntry _createOverlayEntry(Offset position, double width) {
   Animation<double> fadeAnimation = Tween<double>(
-    begin: 0.0, 
-    end: 1.0,   
+    begin: 0.0,
+    end: 1.0,
   ).animate(
     CurvedAnimation(
       parent: _animationController,
       curve: Interval(
-        0.5, 
+        0.5,
         1.0,
         curve: Curves.easeIn,
       ),
@@ -244,7 +221,6 @@ class _PrimaryNavigationScreenState extends State<PrimaryNavigationScreen>
   return OverlayEntry(
     builder: (context) => GestureDetector(
       onTap: () {
-        // Dismiss the popup when tapping outside
         _animationController.reverse().then((value) {
           _overlayEntry.remove();
           setState(() {
@@ -260,7 +236,7 @@ class _PrimaryNavigationScreenState extends State<PrimaryNavigationScreen>
           children: [
             Positioned(
               left: position.dx,
-              top: position.dy -100, // Align the menu with the button's top -100
+              top: position.dy - 173.5,
               width: width,
               child: ClipRect(
                 child: FadeTransition(
@@ -270,6 +246,29 @@ class _PrimaryNavigationScreenState extends State<PrimaryNavigationScreen>
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        
+                        // Profile Button
+                        _buildPopupMenuItem(
+                          icon: Icons.person,
+                          label: 'Profile',
+                          onTap: () {
+                            _animationController.reverse().then((value) {
+                              _overlayEntry.remove();
+                              setState(() {
+                                _isPopupOpen = false;
+                                _selectedNavItem = -1;
+                              });
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const ProfileScreen(),
+                                ),
+                              );
+                            });
+                          },
+                        ),
+                      
+                        // Calendar Button
                         _buildPopupMenuItem(
                           icon: Icons.calendar_today,
                           label: 'Calendar',
@@ -284,6 +283,8 @@ class _PrimaryNavigationScreenState extends State<PrimaryNavigationScreen>
                             });
                           },
                         ),
+
+                        // Shift Management Button
                         _buildPopupMenuItem(
                           icon: Icons.schedule,
                           label: 'Shift Management',
