@@ -116,8 +116,14 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
 
   void _addShift(Map<String, dynamic> newShift) async {
     try {
+      DateTime shiftDate =
+          _selectedDate; // Use the selected date from DatePicker
       DocumentReference docRef = await firestore.collection('shifts').add({
-        "date": newShift["date"],
+        "date": Timestamp.fromDate(DateTime(
+          shiftDate.year,
+          shiftDate.month,
+          shiftDate.day,
+        )), // Set the date field to the selected date without time
         "startTime": newShift["startTime"],
         "endTime": newShift["endTime"],
         "assignedUserId": newShift["assignedUserId"],
@@ -131,7 +137,7 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
       await firestore.collection('shifts').doc(docRef.id).update({
         "shiftId": docRef.id,
       });
-      _fetchShifts();
+      _fetchShifts(); // Refresh the shifts to show the newly added shift
     } catch (e) {
       print('Error adding shift: $e');
       ScaffoldMessenger.of(context).showSnackBar(
