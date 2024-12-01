@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mobile_app_group5/screens/chat_screen.dart';
+import 'package:mobile_app_group5/themes/app_theme.dart';
 
 class ContactsScreen extends StatefulWidget {
   const ContactsScreen({super.key});
@@ -21,9 +22,8 @@ class _ContactsScreenState extends State<ContactsScreen> {
       return;
     }
 
-    final privateChatsStream = FirebaseFirestore.instance
-        .collection('private_chats')
-        .snapshots();
+    final privateChatsStream =
+        FirebaseFirestore.instance.collection('private_chats').snapshots();
 
     await for (var chatsSnapshot in privateChatsStream) {
       final List<Map<String, dynamic>> contacts = [];
@@ -44,7 +44,8 @@ class _ContactsScreenState extends State<ContactsScreen> {
         final chatDocs = chatsSnapshot.docs.where((doc) => doc.id == chatId);
         final chatDoc = chatDocs.isNotEmpty ? chatDocs.first : null;
 
-        final lastMessage = chatDoc?.data()['lastMessage'] as Map<String, dynamic>?;
+        final lastMessage =
+            chatDoc?.data()['lastMessage'] as Map<String, dynamic>?;
         final lastMessageTimestamp = lastMessage?['timestamp'] as Timestamp?;
 
         contacts.add({
@@ -58,14 +59,15 @@ class _ContactsScreenState extends State<ContactsScreen> {
 
       contacts.sort((a, b) => b['timestamp'].compareTo(a['timestamp']));
 
-      final filteredContacts = _searchQuery.isEmpty
-          ? contacts
-          : contacts
-              .where((contact) =>
-                  contact['username']
-                      .toLowerCase()
-                      .contains(_searchQuery.toLowerCase()))
-              .toList();
+      final filteredContacts = contacts.where((contact) {
+        if (_searchQuery.isNotEmpty) {
+          return contact['username']
+              .toLowerCase()
+              .contains(_searchQuery.toLowerCase());
+        } else {
+          return contact['lastMessage'] != null;
+        }
+      }).toList();
 
       yield filteredContacts;
     }
@@ -87,17 +89,35 @@ class _ContactsScreenState extends State<ContactsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Contacts'),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(48.0),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        title: const Text(
+          'Contacts',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 22,
+            color: Colors.white,
+          ),
+        ),
+        centerTitle: true,
+        backgroundColor: AppTheme.blueColor,
+        elevation: 0,
+      ),
+      body: Column(
+        children: [
+          Container(
+            color: Colors.white,
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             child: TextField(
               controller: _searchController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: 'Search Contacts...',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                  borderSide: BorderSide.none,
+                ),
+                filled: true,
+                fillColor: Colors.grey[200],
+                prefixIcon: const Icon(Icons.search, color: Colors.grey),
               ),
               onChanged: (value) {
                 setState(() {
@@ -106,65 +126,74 @@ class _ContactsScreenState extends State<ContactsScreen> {
               },
             ),
           ),
-        ),
-      ),
-      body: StreamBuilder<List<Map<String, dynamic>>>(
-        stream: _getContactsWithLastMessage(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('No contacts found.'));
-          }
+          Expanded(
+            child: StreamBuilder<List<Map<String, dynamic>>>(
+              stream: _getContactsWithLastMessage(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const Center(child: Text('No contacts found.'));
+                }
 
-          final contacts = snapshot.data!;
+                final contacts = snapshot.data!;
 
-          return ListView.builder(
-            itemCount: contacts.length,
-            itemBuilder: (context, index) {
-              final contact = contacts[index];
-              final userId = contact['userId'];
-              final username = contact['username'];
-              final imageUrl = contact['image_url'];
-              final lastMessage = contact['lastMessage'];
+                return ListView.builder(
+                  itemCount: contacts.length,
+                  itemBuilder: (context, index) {
+                    final contact = contacts[index];
+                    final userId = contact['userId'];
+                    final username = contact['username'];
+                    final imageUrl = contact['image_url'];
+                    final lastMessage = contact['lastMessage'];
 
-              return ListTile(
-                leading: CircleAvatar(
-                  backgroundImage:
-                      imageUrl != null ? NetworkImage(imageUrl) : null,
-                  onBackgroundImageError: imageUrl != null
-                      ? (exception, stackTrace) {
-                          print('Error loading image: $exception');
-                        }
-                      : null,
-                ),
-                title: Text(
-                  username,
-                  style: const TextStyle(fontSize: 20),
-                ),
-                subtitle: lastMessage != null && lastMessage['text'] != null
-                    ? Text(
-                        lastMessage['text'],
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(color: Colors.grey),
-                      )
-                    : const Text(
-                        'No messages yet.',
-                        style: TextStyle(color: Colors.grey),
+                    final backgroundColor =
+                        index % 2 == 0 ? const Color.fromARGB(255, 250, 250, 250) : Colors.white;
+
+                    return Container(
+                      color: backgroundColor,
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundImage:
+                              imageUrl != null ? NetworkImage(imageUrl) : null,
+                          onBackgroundImageError: imageUrl != null
+                              ? (exception, stackTrace) {
+                                  print('Error loading image: $exception');
+                                }
+                              : null,
+                        ),
+                        title: Text(
+                          username,
+                          style: const TextStyle(fontSize: 20),
+                        ),
+                        subtitle:
+                            lastMessage != null && lastMessage['text'] != null
+                                ? Text(
+                                    lastMessage['text'],
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(color: Colors.grey),
+                                  )
+                                : const Text(
+                                    'No messages yet.',
+                                    style: TextStyle(color: Colors.grey),
+                                  ),
+                        onTap: () {
+                          if (userId != null && username != null) {
+                            navigateToChat(userId, username);
+                          } else {
+                            print('User ID or Username is null');
+                          }
+                        },
                       ),
-                onTap: () {
-                  if (userId != null && username != null) {
-                    navigateToChat(userId, username);
-                  } else {
-                    print('User ID or Username is null');
-                  }
-                },
-              );
-            },
-          );
-        },
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
