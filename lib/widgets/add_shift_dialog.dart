@@ -159,7 +159,17 @@ class _AddShiftDialogState extends State<AddShiftDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text("Add New Shift"),
+      insetPadding: EdgeInsets.all(16),
+      backgroundColor: Theme.of(context).colorScheme.tertiaryContainer,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+      ),
+      title: Text(
+        "Add New Shift",
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.onSurface,
+        ),
+      ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -183,42 +193,64 @@ class _AddShiftDialogState extends State<AddShiftDialog> {
           const SizedBox(height: 16.0),
           // Start Time Picker
           ListTile(
-            title: const Text("Start Time"),
+            title: Text(
+              "Start Time",
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
             trailing: Text(
               _formatTimeOfDay(startTime),
-              style: const TextStyle(fontSize: 16),
+              style: TextStyle(
+                fontSize: 16,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
             ),
             onTap: () => _showCupertinoTimePicker(context, true),
           ),
           // End Time Picker
           ListTile(
-            title: const Text("End Time"),
+            title: Text(
+              "End Time",
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
             trailing: Text(
               _formatTimeOfDay(endTime),
-              style: const TextStyle(fontSize: 16),
+              style: TextStyle(
+                fontSize: 16,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
             ),
             onTap: () => _showCupertinoTimePicker(context, false),
           ),
           // Dropdown for Assigning User
-          DropdownButton<String>(
-            value: selectedUser,
-            items: [
-              const DropdownMenuItem<String>(
-                value: "Unassigned",
-                child: Text("Unassigned"),
-              ),
-              ...users.map((user) {
-                return DropdownMenuItem<String>(
-                  value: user["id"],
-                  child: Text(user["username"]),
-                );
-              }).toList(),
-            ],
-            onChanged: (String? newValue) {
-              setState(() {
-                selectedUser = newValue ?? "Unassigned";
-              });
-            },
+          Theme(
+            data: Theme.of(context).copyWith(
+              canvasColor:
+                  Colors.white, // Forces the dropdown background to be white
+            ),
+            child: DropdownButton<String>(
+              value: selectedUser,
+              items: [
+                const DropdownMenuItem<String>(
+                  value: "Unassigned",
+                  child: Text("Unassigned"),
+                ),
+                ...users.map((user) {
+                  return DropdownMenuItem<String>(
+                    value: user["id"],
+                    child: Text(user["username"]),
+                  );
+                }).toList(),
+              ],
+              onChanged: (String? newValue) {
+                setState(() {
+                  selectedUser = newValue ?? "Unassigned";
+                });
+              },
+            ),
           ),
         ],
       ),

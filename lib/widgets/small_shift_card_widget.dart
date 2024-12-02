@@ -30,12 +30,26 @@ class SmallShiftCardWidget extends StatelessWidget {
         children: [
           // Avatar Widget
           CircleAvatar(
-            radius: 25, // Slightly increased radius
-            backgroundImage: shift['assignedUserId'] == ''
-                ? AssetImage('assets/images/default_avatar.png')
-                : NetworkImage(shift['avatarUrl'] ?? '') as ImageProvider,
-            backgroundColor: Colors.grey[200], // For when there's no image
+            radius: 25,
+            backgroundColor: Colors.grey[200],
+            backgroundImage:
+                (shift['image_url'] != null && shift['image_url'].isNotEmpty)
+                    ? NetworkImage(shift['image_url'])
+                    : null,
+            child: (shift['image_url'] == null || shift['image_url'].isEmpty)
+                ? Text(
+                    assignedUsername.isNotEmpty
+                        ? assignedUsername[0].toUpperCase()
+                        : '?',
+                    style: TextStyle(
+                      fontSize: 24,
+                      color: Colors.grey[700],
+                      fontWeight: FontWeight.bold,
+                    ),
+                  )
+                : null,
           ),
+
           const SizedBox(width: 16), // Increased space between avatar and text
 
           // Column with Start and End Time and Username

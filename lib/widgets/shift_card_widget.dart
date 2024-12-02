@@ -72,12 +72,25 @@ class ShiftCardWidget extends StatelessWidget {
           // Avatar Widget
           CircleAvatar(
             radius: 25,
-            backgroundImage: isAvailable
-                ? AssetImage(
-                    'assets/images/default_avatar.png') // Replace with your default avatar
-                : NetworkImage(shift['avatarUrl'] ?? '') as ImageProvider,
-            backgroundColor: Colors.grey[200], // For when there's no image
+            backgroundColor: Colors.grey[200],
+            backgroundImage:
+                (shift['image_url'] != null && shift['image_url'].isNotEmpty)
+                    ? NetworkImage(shift['image_url'])
+                    : null,
+            child: (shift['image_url'] == null || shift['image_url'].isEmpty)
+                ? Text(
+                    assignedUsername.isNotEmpty
+                        ? assignedUsername[0].toUpperCase()
+                        : '?',
+                    style: TextStyle(
+                      fontSize: 24,
+                      color: Colors.grey[700],
+                      fontWeight: FontWeight.bold,
+                    ),
+                  )
+                : null,
           ),
+
           const SizedBox(width: 16), // Space between avatar and text
 
           // Column with Start and End Time and Username
