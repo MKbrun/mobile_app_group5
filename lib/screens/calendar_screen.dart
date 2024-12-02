@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:mobile_app_group5/widgets/shift_list_widget.dart';
+import 'package:mobile_app_group5/themes/app_theme.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mobile_app_group5/screens/shift_management_screen.dart';
-import 'package:mobile_app_group5/themes/app_theme.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:mobile_app_group5/widgets/small_shift_card_widget.dart';
 
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
@@ -14,6 +15,7 @@ class CalendarScreen extends StatefulWidget {
 
 class _CalendarScreenState extends State<CalendarScreen> {
   final FirebaseFirestore firestore = FirebaseFirestore.instance;
+  final User? currentUser = FirebaseAuth.instance.currentUser;
   Map<DateTime, List<Map<String, dynamic>>> _shiftEvents = {};
   DateTime _selectedDate = DateTime.now();
   List<Map<String, dynamic>> _shiftsForSelectedDate = [];
@@ -24,9 +26,16 @@ class _CalendarScreenState extends State<CalendarScreen> {
     _fetchShifts();
   }
 
+  // Fetch all shifts for the current user
   void _fetchShifts() async {
+    if (currentUser == null) return;
+
     try {
-      QuerySnapshot snapshot = await firestore.collection('shifts').get();
+      QuerySnapshot snapshot = await firestore
+          .collection('shifts')
+          .where('assignedUserId', isEqualTo: currentUser!.uid)
+          .get();
+
       Map<DateTime, List<Map<String, dynamic>>> shiftMap = {};
       for (var doc in snapshot.docs) {
         if (doc['date'] != null) {
@@ -38,6 +47,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
           }
           shiftMap[dateOnly]!.add({
             "id": doc.id,
+            "date": dateOnly,
             "startTime": (doc['startTime'] != null)
                 ? (doc['startTime'] as Timestamp).toDate()
                 : null,
@@ -51,10 +61,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
       }
       setState(() {
         _shiftEvents = shiftMap;
+        _fetchShiftsForMonth(_selectedDate);
       });
-
-      // Fetch shifts for the initial selected date
-      _fetchShiftsForSelectedDate(_selectedDate);
     } catch (e) {
       print('Error fetching shifts: $e');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -63,20 +71,46 @@ class _CalendarScreenState extends State<CalendarScreen> {
     }
   }
 
-  void _fetchShiftsForSelectedDate(DateTime date) {
-    DateTime dateOnly = DateTime(date.year, date.month, date.day);
+  // Fetch all shifts for the selected month
+  void _fetchShiftsForMonth(DateTime date) {
+    DateTime firstDayOfMonth = DateTime(date.year, date.month, 1);
+    DateTime lastDayOfMonth = DateTime(date.year, date.month + 1, 0);
+
+    List<Map<String, dynamic>> allShifts = [];
+    _shiftEvents.forEach((date, shifts) {
+      if (date.isAfter(firstDayOfMonth.subtract(Duration(days: 1))) &&
+          date.isBefore(lastDayOfMonth.add(Duration(days: 1)))) {
+        allShifts.addAll(shifts);
+      }
+    });
+
     setState(() {
       _selectedDate = date;
-      _shiftsForSelectedDate = _shiftEvents[dateOnly] ?? [];
+      _shiftsForSelectedDate = allShifts;
     });
   }
 
-  void _onDateSelected(BuildContext context, DateTime date) {
-    _fetchShiftsForSelectedDate(date);
+  // Navigate to ShiftManagementScreen when a date is selected
+  void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
+    _fetchShiftsForMonth(selectedDay);
+
+    // Navigate to ShiftManagementScreen for the selected day
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ShiftManagementScreen(selectedDate: date),
+        builder: (context) => ShiftManagementScreen(selectedDate: selectedDay),
+      ),
+    );
+  }
+
+  // Navigate to ShiftManagementScreen when a shift is tapped
+  void _onShiftTapped(Map<String, dynamic> shift) {
+    DateTime shiftDate = shift['date'];
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ShiftManagementScreen(selectedDate: shiftDate),
       ),
     );
   }
@@ -108,7 +142,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
               calendarFormat: CalendarFormat.month,
               eventLoader: (date) => _shiftEvents[date] ?? [],
               onDaySelected: (selectedDay, focusedDay) {
-                _fetchShiftsForSelectedDate(selectedDay);
+                _onDaySelected(selectedDay, focusedDay);
               },
               headerStyle: const HeaderStyle(
                 formatButtonVisible: false,
@@ -123,11 +157,23 @@ class _CalendarScreenState extends State<CalendarScreen> {
               ),
             ),
           ),
+          const Divider(
+            thickness: 2,
+            color: AppTheme.blueColor,
+          ),
+          const SizedBox(height: 20), // Adds some margin below the divider
           Expanded(
-            child: ShiftListWidget(
-              shifts: _shiftsForSelectedDate,
-              onTakeShift: (index) {
-                // Implement shift taking functionality or redirection here if needed
+            child: ListView.builder(
+              itemCount: _shiftsForSelectedDate.length,
+              itemBuilder: (context, index) {
+                final shift = _shiftsForSelectedDate[index];
+                return GestureDetector(
+                  onTap: () =>
+                      _onShiftTapped(shift), // Updated to call _onShiftTapped
+                  child: SmallShiftCardWidget(
+                    shift: shift,
+                  ),
+                );
               },
             ),
           ),
