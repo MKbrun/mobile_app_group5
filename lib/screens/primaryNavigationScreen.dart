@@ -64,7 +64,7 @@ class _PrimaryNavigationScreenState extends State<PrimaryNavigationScreen>
 
   Widget _divider() {
     return Container(
-      width: 1,
+      width: 0.75,
       color: Colors.white.withOpacity(0.6),
     );
   }
@@ -83,7 +83,7 @@ class _PrimaryNavigationScreenState extends State<PrimaryNavigationScreen>
       ),
       bottomNavigationBar: Container(
         width: MediaQuery.of(context).size.width,
-        height: 70, // Fixed height for the navigation bar
+        height: 60,
         decoration: const BoxDecoration(
           color: Colors.white, // Background color
           border: Border(
@@ -135,12 +135,12 @@ class _PrimaryNavigationScreenState extends State<PrimaryNavigationScreen>
               Icon(
                 icon,
                 color: Colors.white,
-                size: 24,
+                size: 22,
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 3),
               Text(
                 label,
-                style: const TextStyle(color: Colors.white, fontSize: 12),
+                style: const TextStyle(color: Colors.white, fontSize: 11),
               ),
             ],
           ),
@@ -172,7 +172,7 @@ class _PrimaryNavigationScreenState extends State<PrimaryNavigationScreen>
               Icon(
                 Icons.more_horiz,
                 color: Colors.white,
-                size: 24,
+                size: 22,
               ),
             ],
           ),

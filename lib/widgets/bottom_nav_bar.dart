@@ -61,13 +61,13 @@ class BottomNavBar extends StatelessWidget {
                 ? [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.2),
-                      offset: const Offset(0, 4),
-                      blurRadius: 6,
+                      offset: const Offset(0, 3),
+                      blurRadius: 5,
                     ),
                   ]
                 : [],
           ),
-          padding: const EdgeInsets.symmetric(vertical: 10),
+          padding: const EdgeInsets.symmetric(vertical: 9),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -77,17 +77,16 @@ class BottomNavBar extends StatelessWidget {
                     ? Colors.white
                         .withOpacity(0.85) // Slightly darker white for selected
                     : Colors.white,
-                size: 24,
+                size: 22,
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 3),
               Text(
                 label,
                 style: TextStyle(
                   color: isSelected
-                      ? Colors.white.withOpacity(
-                          0.85) // Slightly darker white for selected
+                      ? Colors.white.withOpacity(0.85)
                       : Colors.white,
-                  fontSize: 12,
+                  fontSize: 11,
                 ),
               ),
             ],
@@ -99,9 +98,9 @@ class BottomNavBar extends StatelessWidget {
 
   Widget _divider() {
     return Container(
-      width: 1,
-      height: 40,
-      color: Colors.white, // Divider color
+      width: 0.75,
+      height: 35,
+      color: Colors.white,
     );
   }
 }
