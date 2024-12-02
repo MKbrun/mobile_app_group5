@@ -81,7 +81,6 @@ class _PrimaryNavigationScreenState extends State<PrimaryNavigationScreen>
           ),
         ],
       ),
-
       bottomNavigationBar: Container(
         width: MediaQuery.of(context).size.width,
         height: 70, // Fixed height for the navigation bar
@@ -126,7 +125,9 @@ class _PrimaryNavigationScreenState extends State<PrimaryNavigationScreen>
         onTap: () => _onTabTapped(index),
         child: Container(
           decoration: BoxDecoration(
-            color: isSelected ? AppTheme.blueColor : AppTheme.blueColor,
+            color: isSelected
+                ? AppTheme.blueColor.withOpacity(0.85)
+                : AppTheme.blueColor,
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -162,7 +163,7 @@ class _PrimaryNavigationScreenState extends State<PrimaryNavigationScreen>
         child: Container(
           decoration: BoxDecoration(
             color: _selectedNavItem == 3
-                ? AppTheme.blueColor
+                ? AppTheme.blueColor.withOpacity(0.85)
                 : AppTheme.blueColor,
           ),
           child: Column(
@@ -204,120 +205,119 @@ class _PrimaryNavigationScreenState extends State<PrimaryNavigationScreen>
   }
 
   OverlayEntry _createOverlayEntry(Offset position, double width) {
-  Animation<double> fadeAnimation = Tween<double>(
-    begin: 0.0,
-    end: 1.0,
-  ).animate(
-    CurvedAnimation(
-      parent: _animationController,
-      curve: Interval(
-        0.5,
-        1.0,
-        curve: Curves.easeIn,
+    Animation<double> fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Interval(
+          0.5,
+          1.0,
+          curve: Curves.easeIn,
+        ),
       ),
-    ),
-  );
+    );
 
-  return OverlayEntry(
-    builder: (context) => GestureDetector(
-      onTap: () {
-        _animationController.reverse().then((value) {
-          _overlayEntry.remove();
-          setState(() {
-            _isPopupOpen = false;
-            _selectedNavItem = -1;
+    return OverlayEntry(
+      builder: (context) => GestureDetector(
+        onTap: () {
+          _animationController.reverse().then((value) {
+            _overlayEntry.remove();
+            setState(() {
+              _isPopupOpen = false;
+              _selectedNavItem = -1;
+            });
           });
-        });
-      },
-      behavior: HitTestBehavior.translucent,
-      child: Material(
-        color: Colors.transparent,
-        child: Stack(
-          children: [
-            Positioned(
-              left: position.dx,
-              top: position.dy - 173.5,
-              width: width,
-              child: ClipRect(
-                child: FadeTransition(
-                  opacity: fadeAnimation,
-                  child: SlideTransition(
-                    position: _offsetAnimation,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        
-                        // Profile Button
-                        _buildPopupMenuItem(
-                          icon: Icons.person,
-                          label: 'Profile',
-                          onTap: () {
-                            _animationController.reverse().then((value) {
-                              _overlayEntry.remove();
-                              setState(() {
-                                _isPopupOpen = false;
-                                _selectedNavItem = -1;
-                              });
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const ProfileScreen(),
-                                ),
-                              );
-                            });
-                          },
-                        ),
-                      
-                        // Calendar Button
-                        _buildPopupMenuItem(
-                          icon: Icons.calendar_today,
-                          label: 'Calendar',
-                          onTap: () {
-                            _animationController.reverse().then((value) {
-                              _overlayEntry.remove();
-                              setState(() {
-                                _currentIndex = 2; // CalendarScreen index
-                                _selectedNavItem = 2; // Highlight Calendar
-                                _isPopupOpen = false;
-                              });
-                            });
-                          },
-                        ),
-
-                        // Shift Management Button
-                        _buildPopupMenuItem(
-                          icon: Icons.schedule,
-                          label: 'Shift Management',
-                          onTap: () {
-                            _animationController.reverse().then((value) {
-                              _overlayEntry.remove();
-                              setState(() {
-                                _selectedNavItem = -1;
-                                _isPopupOpen = false;
-                              });
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => ShiftManagementScreen(
-                                    selectedDate: DateTime.now(),
+        },
+        behavior: HitTestBehavior.translucent,
+        child: Material(
+          color: Colors.transparent,
+          child: Stack(
+            children: [
+              Positioned(
+                left: position.dx,
+                top: position.dy - 173.5,
+                width: width,
+                child: ClipRect(
+                  child: FadeTransition(
+                    opacity: fadeAnimation,
+                    child: SlideTransition(
+                      position: _offsetAnimation,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Profile Button
+                          _buildPopupMenuItem(
+                            icon: Icons.person,
+                            label: 'Profile',
+                            onTap: () {
+                              _animationController.reverse().then((value) {
+                                _overlayEntry.remove();
+                                setState(() {
+                                  _isPopupOpen = false;
+                                  _selectedNavItem = -1;
+                                });
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const ProfileScreen(),
                                   ),
-                                ),
-                              );
-                            });
-                          },
-                        ),
-                      ],
+                                );
+                              });
+                            },
+                          ),
+
+                          // Calendar Button
+                          _buildPopupMenuItem(
+                            icon: Icons.calendar_today,
+                            label: 'Calendar',
+                            onTap: () {
+                              _animationController.reverse().then((value) {
+                                _overlayEntry.remove();
+                                setState(() {
+                                  _currentIndex = 2; // CalendarScreen index
+                                  _selectedNavItem = 2; // Highlight Calendar
+                                  _isPopupOpen = false;
+                                });
+                              });
+                            },
+                          ),
+
+                          // Shift Management Button
+                          _buildPopupMenuItem(
+                            icon: Icons.schedule,
+                            label: 'Shift Management',
+                            onTap: () {
+                              _animationController.reverse().then((value) {
+                                _overlayEntry.remove();
+                                setState(() {
+                                  _selectedNavItem = -1;
+                                  _isPopupOpen = false;
+                                });
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ShiftManagementScreen(
+                                      selectedDate: DateTime.now(),
+                                    ),
+                                  ),
+                                );
+                              });
+                            },
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildPopupMenuItem(
       {required IconData icon,
