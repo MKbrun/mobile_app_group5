@@ -138,6 +138,14 @@ class ProfileScreen extends StatelessWidget {
 
                           RestartableApp.restartApp(context);
                         },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              AppTheme.blueColor, // Set color from AppTheme
+                          foregroundColor:
+                              Colors.white, // Ensure the text color is readable
+                          fixedSize: const Size(
+                              200, 50), // Optional: size for consistency
+                        ),
                         child: Text(
                           Theme.of(context).brightness == Brightness.dark
                               ? 'Switch to Light Mode'
@@ -149,7 +157,8 @@ class ProfileScreen extends StatelessWidget {
                           await _logout(context);
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red.withOpacity(0.8),
+                          backgroundColor: AppTheme.redColor
+                              .withOpacity(0.9), // Use AppTheme redColor
                           fixedSize: const Size(150, 50),
                         ),
                         child: const Text('Logout'),

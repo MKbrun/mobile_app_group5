@@ -174,7 +174,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
               ),
               calendarStyle: CalendarStyle(
                 todayDecoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.secondary,
+                  color: AppTheme.blueColor,
                   shape: BoxShape.circle,
                 ),
                 todayTextStyle: const TextStyle(color: Colors.white),

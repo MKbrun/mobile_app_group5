@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mobile_app_group5/screens/primaryNavigationScreen.dart';
+import 'package:mobile_app_group5/themes/app_theme.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -85,7 +86,8 @@ class HomeScreen extends StatelessWidget {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.secondary,
+                    backgroundColor: AppTheme
+                        .blueColor, // Use AppTheme.blueColor for consistency
                     shape: const CircleBorder(),
                     padding: const EdgeInsets.all(30),
                   ),

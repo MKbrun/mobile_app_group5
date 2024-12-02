@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:mobile_app_group5/themes/app_theme.dart';
 
 class AddShiftDialog extends StatefulWidget {
   @override
@@ -27,8 +28,7 @@ class _AddShiftDialogState extends State<AddShiftDialog> {
           await FirebaseFirestore.instance.collection('users').get();
       setState(() {
         users = snapshot.docs.map((doc) {
-          final data = doc.data()
-              as Map<String, dynamic>?; // Casting to Map<String, dynamic>?
+          final data = doc.data() as Map<String, dynamic>?;
           return {
             "id": doc.id,
             "username": data != null && data.containsKey('username')
@@ -143,6 +143,9 @@ class _AddShiftDialogState extends State<AddShiftDialog> {
                     });
                     Navigator.of(context).pop();
                   },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.blueColor,
+                  ),
                   child: const Text("OK"),
                 ),
               ),
@@ -163,8 +166,21 @@ class _AddShiftDialogState extends State<AddShiftDialog> {
           // Shift Title
           TextField(
             controller: _titleController,
-            decoration: InputDecoration(labelText: "Shift Title"),
+            decoration: InputDecoration(
+              labelText: "Shift Title",
+              labelStyle:
+                  TextStyle(color: AppTheme.blueColor), // Apply theme color
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: AppTheme.blueColor),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: AppTheme.blueColor),
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
           ),
+          const SizedBox(height: 16.0),
           // Start Time Picker
           ListTile(
             title: const Text("Start Time"),
@@ -212,6 +228,9 @@ class _AddShiftDialogState extends State<AddShiftDialog> {
           onPressed: () {
             Navigator.of(context).pop();
           },
+          style: TextButton.styleFrom(
+            foregroundColor: AppTheme.blueColor, // Update "Cancel" button color
+          ),
         ),
         ElevatedButton(
           child: const Text("Add Shift"),
@@ -219,8 +238,8 @@ class _AddShiftDialogState extends State<AddShiftDialog> {
             if (startTime != null && endTime != null) {
               // Create new shift data
               Map<String, dynamic> newShift = {
-                "date": DateTime
-                    .now(), // This should be updated to the selected date from widget
+                "date":
+                    DateTime.now(), // Update this to selected date if needed
                 "startTime": Timestamp.fromDate(DateTime.now().add(Duration(
                     hours: startTime!.hour, minutes: startTime!.minute))),
                 "endTime": Timestamp.fromDate(DateTime.now().add(
@@ -238,6 +257,10 @@ class _AddShiftDialogState extends State<AddShiftDialog> {
               );
             }
           },
+          style: ElevatedButton.styleFrom(
+            backgroundColor:
+                AppTheme.blueColor, // Update "Add Shift" button color
+          ),
         ),
       ],
     );

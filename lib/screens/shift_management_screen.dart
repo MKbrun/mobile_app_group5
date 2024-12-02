@@ -445,6 +445,9 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
                     _addShift(newShift);
                   }
                 },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.blueColor,
+                ),
                 child: const Text("Add New Shift"),
               ),
             ),

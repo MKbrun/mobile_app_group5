@@ -16,8 +16,8 @@ class AppTheme {
       primary: const Color.fromARGB(255, 242, 244, 247),
       secondary: blueColor,
       tertiary: const Color.fromARGB(255, 255, 255, 255),
-      tertiaryContainer: Color.fromARGB(255, 245, 245, 245), 
-      surface: Color.fromARGB(255, 158, 158, 158), 
+      tertiaryContainer: Color.fromARGB(255, 245, 245, 245),
+      surface: Color.fromARGB(255, 158, 158, 158),
       onPrimary: Colors.black, // Explicitly set black for light mode
       onSurface: const Color.fromARGB(255, 75, 74, 74),
     ),
@@ -37,8 +37,8 @@ class AppTheme {
       primary: const Color.fromARGB(255, 33, 33, 33),
       secondary: darkBlueColor,
       tertiary: const Color.fromARGB(255, 0, 0, 0),
-      tertiaryContainer: Color.fromARGB(255, 30, 30, 30), 
-      surface: Color.fromARGB(255, 33, 33, 33), 
+      tertiaryContainer: Color.fromARGB(255, 30, 30, 30),
+      surface: Color.fromARGB(255, 33, 33, 33),
       onPrimary: Colors.white, // Explicitly set white for dark mode
       onSurface: const Color.fromARGB(255, 168, 168, 168),
     ),
@@ -70,7 +70,7 @@ class AppTheme {
       BottomNavigationBarThemeData(
     backgroundColor: Color.fromARGB(255, 242, 244, 247),
     selectedItemColor: blueColor,
-    unselectedItemColor: Color.fromARGB(255, 158, 158, 158), 
+    unselectedItemColor: Color.fromARGB(255, 158, 158, 158),
   );
 
   static final InputDecorationTheme _lightInputDecorationTheme =
@@ -84,7 +84,7 @@ class AppTheme {
       borderRadius: BorderRadius.circular(10),
     ),
     labelStyle: const TextStyle(color: blueColor),
-    hintStyle: const TextStyle(color: Color.fromARGB(255, 158, 158, 158)), 
+    hintStyle: const TextStyle(color: Color.fromARGB(255, 158, 158, 158)),
   );
 
   // Private Theme Configurations for Dark
@@ -107,7 +107,7 @@ class AppTheme {
       BottomNavigationBarThemeData(
     backgroundColor: Color.fromARGB(255, 18, 18, 18),
     selectedItemColor: darkBlueColor,
-    unselectedItemColor: Color.fromARGB(255, 117, 117, 117), 
+    unselectedItemColor: Color.fromARGB(255, 117, 117, 117),
   );
 
   static final InputDecorationTheme _darkInputDecorationTheme =
@@ -121,22 +121,21 @@ class AppTheme {
       borderRadius: BorderRadius.circular(10),
     ),
     labelStyle: const TextStyle(color: darkBlueColor),
-    hintStyle: const TextStyle(color: Color.fromARGB(255, 117, 117, 117)), 
+    hintStyle: const TextStyle(color: Color.fromARGB(255, 117, 117, 117)),
   );
 
   // Shared Button Style
   static final ElevatedButtonThemeData _elevatedButtonTheme =
       ElevatedButtonThemeData(
     style: ElevatedButton.styleFrom(
-      backgroundColor: blueColor,
-      foregroundColor: const Color.fromARGB(255, 242, 244, 247),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-      ),
-      textStyle: TextStyle(
-        color: Colors.white,
-      )
-    ),
+        backgroundColor: blueColor,
+        foregroundColor: const Color.fromARGB(255, 242, 244, 247),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        textStyle: TextStyle(
+          color: Colors.white,
+        )),
   );
 
   static final TextButtonThemeData _textButtonTheme = TextButtonThemeData(
@@ -145,14 +144,13 @@ class AppTheme {
     ),
   );
 
-   static final ButtonStyle lightGreenButtonStyle = ElevatedButton.styleFrom(
-    backgroundColor: lightGreenColor,
-    foregroundColor: Color.fromARGB(255, 242, 244, 247),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(8),
-    ),
-    textStyle: TextStyle(
+  static final ButtonStyle lightGreenButtonStyle = ElevatedButton.styleFrom(
+      backgroundColor: lightGreenColor,
+      foregroundColor: Color.fromARGB(255, 242, 244, 247),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+      ),
+      textStyle: TextStyle(
         color: Colors.white,
-      )
-  );
+      ));
 }
