@@ -107,3 +107,12 @@ This projects is a group effort, and each team member contributed to different a
 - **Android studio**: Testing the app in a virtual device
 - **ChatGPT**: Helped research and debug the code
 - **CoPilot**: Helped alot during debugging
+
+## Additional Information
+
+For more detailed information, please refer to the [Wiki](https://github.com/MKbrun/mobile_app_group5/wiki).
+
+* Class Diagram: [Read Wiki](https://github.com/MKbrun/mobile_app_group5/wiki/Class-diagram)
+* Team Meetings: [Read Wiki](https://github.com/MKbrun/mobile_app_group5/wiki/Team-meetings)
+* User Stories: [Read Wiki](https://github.com/MKbrun/mobile_app_group5/wiki/User-Stories)
+* Wireframes: [Read Wiki](https://github.com/MKbrun/mobile_app_group5/wiki/Wireframe)
