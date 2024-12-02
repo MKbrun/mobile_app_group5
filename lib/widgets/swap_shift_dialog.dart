@@ -14,7 +14,10 @@ class SwapShiftDialog extends StatelessWidget {
           children: userShifts.map((shift) {
             return ListTile(
               title: Text(
-                "${shift['startTime'].hour}:${shift['startTime'].minute.toString().padLeft(2, '0')} - ${shift['endTime'].hour}:${shift['endTime'].minute.toString().padLeft(2, '0')}",
+                "Your Shift: ${shift['startTime'].hour}:${shift['startTime'].minute.toString().padLeft(2, '0')} - ${shift['endTime'].hour}:${shift['endTime'].minute.toString().padLeft(2, '0')}",
+              ),
+              subtitle: Text(
+                "Date: ${shift['startTime'].day}-${shift['startTime'].month}-${shift['startTime'].year}",
               ),
               onTap: () {
                 Navigator.of(context).pop(shift); // Return the selected shift

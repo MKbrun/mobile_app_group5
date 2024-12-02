@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_app_group5/themes/app_theme.dart';
-import 'package:mobile_app_group5/widgets/swap_request_button.dart';
 
 class ShiftCardWidget extends StatelessWidget {
   final Map<String, dynamic> shift;
@@ -24,8 +23,7 @@ class ShiftCardWidget extends StatelessWidget {
     String assignedUserId = shift['assignedUserId'] ?? '';
     bool isAvailable = assignedUserId.isEmpty;
     bool isSwapRequested = shift['tradeTargetUserId'] == currentUserId &&
-        shift['tradeRequestedBy'] !=
-            ''; // Check if this shift has a swap request for the current user
+        shift['tradeRequestedBy'] != '';
 
     String buttonText;
     VoidCallback? buttonAction;
