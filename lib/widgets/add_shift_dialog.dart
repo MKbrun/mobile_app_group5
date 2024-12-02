@@ -4,6 +4,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mobile_app_group5/themes/app_theme.dart';
 
 class AddShiftDialog extends StatefulWidget {
+  const AddShiftDialog({super.key});
+
   @override
   _AddShiftDialogState createState() => _AddShiftDialogState();
 }
@@ -12,7 +14,7 @@ class _AddShiftDialogState extends State<AddShiftDialog> {
   TimeOfDay? startTime;
   TimeOfDay? endTime;
   String selectedUser = "Unassigned";
-  TextEditingController _titleController = TextEditingController();
+  final TextEditingController _titleController = TextEditingController();
   List<Map<String, dynamic>> users = [];
 
   @override
@@ -243,7 +245,7 @@ class _AddShiftDialogState extends State<AddShiftDialog> {
                     value: user["id"],
                     child: Text(user["username"]),
                   );
-                }).toList(),
+                }),
               ],
               onChanged: (String? newValue) {
                 setState(() {
@@ -256,26 +258,41 @@ class _AddShiftDialogState extends State<AddShiftDialog> {
       ),
       actions: [
         TextButton(
-          child: const Text("Cancel"),
           onPressed: () {
             Navigator.of(context).pop();
           },
           style: TextButton.styleFrom(
             foregroundColor: AppTheme.blueColor, // Update "Cancel" button color
           ),
+          child: const Text("Cancel"),
         ),
         ElevatedButton(
-          child: const Text("Add Shift"),
           onPressed: () {
             if (startTime != null && endTime != null) {
+              // Create DateTime objects that include the selected date and time for the shift.
+              DateTime selectedDate = DateTime
+                  .now(); // Update this to receive the selected date appropriately
+              DateTime startDateTime = DateTime(
+                selectedDate.year,
+                selectedDate.month,
+                selectedDate.day,
+                startTime!.hour,
+                startTime!.minute,
+              );
+
+              DateTime endDateTime = DateTime(
+                selectedDate.year,
+                selectedDate.month,
+                selectedDate.day,
+                endTime!.hour,
+                endTime!.minute,
+              );
+
               // Create new shift data
               Map<String, dynamic> newShift = {
-                "date":
-                    DateTime.now(), // Update this to selected date if needed
-                "startTime": Timestamp.fromDate(DateTime.now().add(Duration(
-                    hours: startTime!.hour, minutes: startTime!.minute))),
-                "endTime": Timestamp.fromDate(DateTime.now().add(
-                    Duration(hours: endTime!.hour, minutes: endTime!.minute))),
+                "date": Timestamp.fromDate(selectedDate),
+                "startTime": Timestamp.fromDate(startDateTime),
+                "endTime": Timestamp.fromDate(endDateTime),
                 "assignedUserId":
                     selectedUser == "Unassigned" ? "" : selectedUser,
                 "title": _titleController.text.trim(),
@@ -293,6 +310,7 @@ class _AddShiftDialogState extends State<AddShiftDialog> {
             backgroundColor:
                 AppTheme.blueColor, // Update "Add Shift" button color
           ),
+          child: const Text("Add Shift"),
         ),
       ],
     );

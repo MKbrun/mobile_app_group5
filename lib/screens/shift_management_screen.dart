@@ -2,13 +2,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mobile_app_group5/widgets/date_picker_widget.dart';
-import 'package:mobile_app_group5/widgets/shift_card_widget.dart';
 import 'package:mobile_app_group5/widgets/shift_list_widget.dart';
 import 'package:mobile_app_group5/widgets/add_shift_dialog.dart';
 import 'package:mobile_app_group5/widgets/swap_approval_dialog.dart';
 import 'package:mobile_app_group5/widgets/swap_shift_dialog.dart';
 import 'package:mobile_app_group5/themes/app_theme.dart';
-import 'package:collection/collection.dart';
 
 class ShiftManagementScreen extends StatefulWidget {
   final DateTime selectedDate;
@@ -25,14 +23,12 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
 
   late DateTime _selectedDate;
   bool _isAdmin = false;
-  List<Map<String, dynamic>> shifts = [];
 
   @override
   void initState() {
     super.initState();
     _selectedDate = widget.selectedDate;
     _checkAdminStatus();
-    _fetchShifts();
   }
 
   void _checkAdminStatus() async {
@@ -45,88 +41,47 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
     }
   }
 
-  void _fetchShifts() async {
-    try {
-      DateTime startOfDay =
-          DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
-      DateTime endOfDay = startOfDay.add(const Duration(days: 1));
-
-      QuerySnapshot usersSnapshot = await firestore.collection('users').get();
-      Map<String, String> userIdToUsername = {};
-
-      for (var userDoc in usersSnapshot.docs) {
-        Map<String, dynamic>? userData =
-            userDoc.data() as Map<String, dynamic>?;
-
-        if (userData != null && userData.containsKey('username')) {
-          userIdToUsername[userDoc.id] = userData['username'];
-        } else {
-          userIdToUsername[userDoc.id] = "Unknown";
-        }
-      }
-
-      QuerySnapshot shiftsSnapshot = await firestore
-          .collection('shifts')
-          .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
-          .where('date', isLessThan: Timestamp.fromDate(endOfDay))
-          .get();
-
-      List<Map<String, dynamic>> fetchedShifts = [];
-
-      for (var doc in shiftsSnapshot.docs) {
-        String? assignedUserId = doc['assignedUserId'] as String?;
-
-        String assignedUsername = "Unassigned";
-
-        if (assignedUserId != null && assignedUserId.isNotEmpty) {
-          assignedUsername = userIdToUsername[assignedUserId] ?? "Unknown";
-        }
-
-        fetchedShifts.add({
-          "id": doc.id,
-          "date": (doc['date'] != null)
-              ? (doc['date'] as Timestamp).toDate()
-              : null,
-          "startTime": (doc['startTime'] != null)
-              ? (doc['startTime'] as Timestamp).toDate()
-              : null,
-          "endTime": (doc['endTime'] != null)
-              ? (doc['endTime'] as Timestamp).toDate()
-              : null,
-          "assignedUserId": assignedUserId ?? '',
-          "assignedUsername": assignedUsername,
-          "createdBy": doc['createdBy'] ?? '',
-          "available": assignedUserId == null || assignedUserId.isEmpty,
-          "title": doc['title'] ?? "No Title",
-          "tradeRequestedBy": doc['tradeRequestedBy'] ?? '',
-          "tradeTargetUserId": doc['tradeTargetUserId'] ?? '',
-          "isTradeApproved": doc['isTradeApproved'] ?? false,
-        });
-      }
-
-      setState(() {
-        shifts = fetchedShifts;
-      });
-    } catch (e) {
-      print('Error fetching shifts: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error fetching shifts: $e')),
-      );
-    }
-  }
-
   void _addShift(Map<String, dynamic> newShift) async {
     try {
-      DateTime shiftDate = _selectedDate;
+      DateTime startDateTime = newShift["startTime"].toDate();
+      DateTime endDateTime = newShift["endTime"].toDate();
+      String assignedUserId = newShift["assignedUserId"];
+
+      // If the shift is assigned to a user, check for overlap for that user.
+      if (assignedUserId.isNotEmpty) {
+        // Fetch existing shifts for that day for the specific user
+        QuerySnapshot existingShiftsSnapshot = await firestore
+            .collection('shifts')
+            .where('assignedUserId', isEqualTo: assignedUserId)
+            .where('date', isEqualTo: Timestamp.fromDate(_selectedDate))
+            .get();
+
+        bool overlap = existingShiftsSnapshot.docs.any((shiftDoc) {
+          DateTime existingStart =
+              (shiftDoc['startTime'] as Timestamp).toDate();
+          DateTime existingEnd = (shiftDoc['endTime'] as Timestamp).toDate();
+
+          // Check if the new shift overlaps with any of the existing shifts assigned to this user
+          return (startDateTime.isBefore(existingEnd) &&
+              endDateTime.isAfter(existingStart));
+        });
+
+        if (overlap) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text(
+                    'Error: Shift times overlap with an existing shift assigned to this user')),
+          );
+          return;
+        }
+      }
+
+      // Proceed with adding the shift if no overlap or no user is assigned
       DocumentReference docRef = await firestore.collection('shifts').add({
-        "date": Timestamp.fromDate(DateTime(
-          shiftDate.year,
-          shiftDate.month,
-          shiftDate.day,
-        )),
-        "startTime": newShift["startTime"],
-        "endTime": newShift["endTime"],
-        "assignedUserId": newShift["assignedUserId"],
+        "date": Timestamp.fromDate(_selectedDate),
+        "startTime": Timestamp.fromDate(startDateTime),
+        "endTime": Timestamp.fromDate(endDateTime),
+        "assignedUserId": assignedUserId,
         "createdBy": currentUser?.uid,
         "isTradeApproved": false,
         "tradeRequestedBy": "",
@@ -137,7 +92,6 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
       await firestore.collection('shifts').doc(docRef.id).update({
         "shiftId": docRef.id,
       });
-      _fetchShifts();
     } catch (e) {
       print('Error adding shift: $e');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -146,13 +100,11 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
     }
   }
 
-  void _takeShift(int index) async {
-    String shiftId = shifts[index]["id"];
+  void _takeShift(String shiftId) async {
     try {
       await firestore.collection('shifts').doc(shiftId).update({
         "assignedUserId": currentUser?.uid,
       });
-      _fetchShifts();
     } catch (e) {
       print('Error taking shift: $e');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -161,7 +113,134 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
     }
   }
 
-  void _swapShift(int index) async {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'Shift Management',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 22,
+            color: Colors.white,
+          ),
+        ),
+        centerTitle: true,
+        backgroundColor: AppTheme.blueColor,
+        elevation: 0,
+      ),
+      body: Column(
+        children: [
+          DatePickerWidget(
+            selectedDate: _selectedDate,
+            onDatePicked: (date) {
+              setState(() {
+                _selectedDate = date;
+              });
+            },
+          ),
+          if (_isAdmin)
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ElevatedButton(
+                onPressed: () async {
+                  Map<String, dynamic>? newShift = await showDialog(
+                    context: context,
+                    builder: (context) => AddShiftDialog(),
+                  );
+                  if (newShift != null) {
+                    _addShift(newShift);
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.blueColor,
+                ),
+                child: const Text("Add New Shift"),
+              ),
+            ),
+          Expanded(
+            child: StreamBuilder<QuerySnapshot>(
+              stream: firestore
+                  .collection('shifts')
+                  .where('date',
+                      isGreaterThanOrEqualTo: Timestamp.fromDate(DateTime(
+                          _selectedDate.year,
+                          _selectedDate.month,
+                          _selectedDate.day)))
+                  .where('date',
+                      isLessThan: Timestamp.fromDate(DateTime(
+                          _selectedDate.year,
+                          _selectedDate.month,
+                          _selectedDate.day + 1)))
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                }
+
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return const Center(
+                      child:
+                          Text('No shifts available for the selected date.'));
+                }
+
+                List<Map<String, dynamic>> fetchedShifts =
+                    snapshot.data!.docs.map((doc) {
+                  String? assignedUserId = doc['assignedUserId'] as String?;
+                  String assignedUsername =
+                      assignedUserId != null && assignedUserId.isNotEmpty
+                          ? "Fetching..."
+                          : "Unassigned";
+
+                  return {
+                    "id": doc.id,
+                    "date": (doc['date'] != null)
+                        ? (doc['date'] as Timestamp).toDate()
+                        : null,
+                    "startTime": (doc['startTime'] != null)
+                        ? (doc['startTime'] as Timestamp).toDate()
+                        : null,
+                    "endTime": (doc['endTime'] != null)
+                        ? (doc['endTime'] as Timestamp).toDate()
+                        : null,
+                    "assignedUserId": assignedUserId ?? '',
+                    "assignedUsername": assignedUsername,
+                    "createdBy": doc['createdBy'] ?? '',
+                    "available":
+                        assignedUserId == null || assignedUserId.isEmpty,
+                    "title": doc['title'] ?? "No Title",
+                    "tradeRequestedBy": doc['tradeRequestedBy'] ?? '',
+                    "tradeTargetUserId": doc['tradeTargetUserId'] ?? '',
+                    "isTradeApproved": doc['isTradeApproved'] ?? false,
+                  };
+                }).toList();
+
+                return ShiftListWidget(
+                  shifts: fetchedShifts,
+                  onTakeShift: (index) {
+                    if (fetchedShifts[index]["available"]) {
+                      _takeShift(fetchedShifts[index]["id"]);
+                    }
+                  },
+                  onSwapShift: (index) {
+                    _swapShift(index, fetchedShifts);
+                  },
+                  onApproveSwap: (index) {
+                    _approveOrRejectSwap(index, fetchedShifts);
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _swapShift(int index, List<Map<String, dynamic>> shifts) async {
     Map<String, dynamic> selectedShift = shifts[index];
 
     // Get all shifts that are assigned to the current user
@@ -194,13 +273,6 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
         String? requestedById = currentUser?.uid;
         String? targetUserId = selectedShift['assignedUserId'];
 
-        // Log the values for debugging purposes
-        print('Initiating swap request:');
-        print('Offered Shift ID: $offeredShiftId');
-        print('Requested Shift ID: $requestedShiftId');
-        print('Requested By User ID: $requestedById');
-        print('Target User ID: $targetUserId');
-
         // Check if all values are valid
         if (offeredShiftId.isEmpty || requestedShiftId.isEmpty) {
           throw Exception(
@@ -222,31 +294,9 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
           ], // Store both shift IDs in an array
         });
 
-        // Fetch the updated document to verify
-        DocumentSnapshot<Map<String, dynamic>> updatedShiftSnapshot =
-            await firestore.collection('shifts').doc(requestedShiftId).get();
-
-        if (updatedShiftSnapshot.exists) {
-          Map<String, dynamic>? updatedData = updatedShiftSnapshot.data();
-          print(
-              'Updated document data after swap request initiation: $updatedData');
-
-          // Verify if tradeShifts were properly saved
-          if (updatedData == null ||
-              updatedData['tradeShifts'] == null ||
-              updatedData['tradeShifts'].contains("") ||
-              updatedData['tradeShifts'].length != 2) {
-            throw Exception(
-                "tradeShifts were not updated properly in Firestore.");
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Swap request has been sent')),
-            );
-          }
-        } else {
-          throw Exception(
-              "Failed to fetch the updated shift document after swap request.");
-        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Swap request has been sent')),
+        );
       } catch (e) {
         print('Error initiating swap: $e');
         ScaffoldMessenger.of(context).showSnackBar(
@@ -256,7 +306,8 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
     }
   }
 
-  void _approveOrRejectSwap(int index) async {
+  void _approveOrRejectSwap(
+      int index, List<Map<String, dynamic>> shifts) async {
     Map<String, dynamic> selectedShift = shifts[index];
 
     // Fetch the latest version of the selected shift document
@@ -381,9 +432,6 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Shift swap approved successfully')),
         );
-
-        // Refresh the shifts list to reflect the change in the UI immediately
-        _fetchShifts();
       } catch (e) {
         print('Error approving swap: $e');
         ScaffoldMessenger.of(context).showSnackBar(
@@ -403,9 +451,6 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Shift swap request rejected')),
         );
-
-        // Refresh the shifts list to reflect the change in the UI immediately
-        _fetchShifts();
       } catch (e) {
         print('Error rejecting swap: $e');
         ScaffoldMessenger.of(context).showSnackBar(
@@ -413,72 +458,5 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
         );
       }
     }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Shift Management',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 22,
-            color: Colors.white,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: AppTheme.blueColor,
-        elevation: 0,
-      ),
-      body: Column(
-        children: [
-          DatePickerWidget(
-            selectedDate: _selectedDate,
-            onDatePicked: (date) {
-              setState(() {
-                _selectedDate = date;
-              });
-              _fetchShifts();
-            },
-          ),
-          if (_isAdmin)
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ElevatedButton(
-                onPressed: () async {
-                  Map<String, dynamic>? newShift = await showDialog(
-                    context: context,
-                    builder: (context) => AddShiftDialog(),
-                  );
-                  if (newShift != null) {
-                    _addShift(newShift);
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.blueColor,
-                ),
-                child: const Text("Add New Shift"),
-              ),
-            ),
-          Expanded(
-            child: ShiftListWidget(
-              shifts: shifts,
-              onTakeShift: (index) {
-                if (shifts[index]["available"]) {
-                  _takeShift(index);
-                }
-              },
-              onSwapShift: (index) {
-                _swapShift(index);
-              },
-              onApproveSwap: (index) {
-                _approveOrRejectSwap(index);
-              },
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }

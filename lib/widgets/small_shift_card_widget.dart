@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mobile_app_group5/themes/app_theme.dart';
 
 class SmallShiftCardWidget extends StatelessWidget {
@@ -6,14 +7,30 @@ class SmallShiftCardWidget extends StatelessWidget {
   final String currentUserId;
 
   const SmallShiftCardWidget({
-    Key? key,
+    super.key,
     required this.shift,
     required this.currentUserId,
-  }) : super(key: key);
+  });
+
+  Future<String> _fetchAssignedUsername(String assignedUserId) async {
+    try {
+      DocumentSnapshot userSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(assignedUserId)
+          .get();
+      if (userSnapshot.exists) {
+        return userSnapshot['username'] ?? 'Unknown User';
+      } else {
+        return 'Unknown User';
+      }
+    } catch (e) {
+      return 'Unknown User';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    String assignedUsername = shift['assignedUsername'] ?? 'Unassigned';
+    String assignedUserId = shift['assignedUserId'] ?? '';
 
     // Extract start and end time
     String startTime = shift['startTime'] != null
@@ -38,8 +55,8 @@ class SmallShiftCardWidget extends StatelessWidget {
                     : null,
             child: (shift['image_url'] == null || shift['image_url'].isEmpty)
                 ? Text(
-                    assignedUsername.isNotEmpty
-                        ? assignedUsername[0].toUpperCase()
+                    assignedUserId.isNotEmpty
+                        ? assignedUserId[0].toUpperCase()
                         : '?',
                     style: TextStyle(
                       fontSize: 24,
@@ -65,13 +82,47 @@ class SmallShiftCardWidget extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                 ),
-                // Display assigned username
-                Text(
-                  "Assigned to: $assignedUsername",
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onPrimary,
-                      ),
-                ),
+                // Display assigned username only when it is fetched
+                if (assignedUserId.isNotEmpty)
+                  FutureBuilder<String>(
+                    future: _fetchAssignedUsername(assignedUserId),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.done &&
+                          snapshot.hasData) {
+                        return Text(
+                          "Assigned to: ${snapshot.data}",
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.onPrimary,
+                              ),
+                        );
+                      } else if (snapshot.connectionState ==
+                              ConnectionState.done &&
+                          snapshot.hasError) {
+                        return Text(
+                          "Assigned to: Unknown User",
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.onPrimary,
+                              ),
+                        );
+                      } else {
+                        return SizedBox
+                            .shrink(); // Hide the text until it's loaded
+                      }
+                    },
+                  ),
+                if (assignedUserId.isEmpty)
+                  Text(
+                    "Assigned to: Unassigned",
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onPrimary,
+                        ),
+                  ),
               ],
             ),
           ),
