@@ -169,6 +169,9 @@ class _AuthScreenState extends State<AuthScreen> {
                                         .blue), // Highlight border on focus
                               ),
                             ),
+                            style: const TextStyle(
+                                color: Color.fromARGB(255, 0, 0, 0),
+                              ),
                             keyboardType: TextInputType.emailAddress,
                             autocorrect: false,
                             textCapitalization: TextCapitalization.none,
@@ -207,6 +210,9 @@ class _AuthScreenState extends State<AuthScreen> {
                                           .blue), // Highlight border on focus
                                 ),
                               ),
+                              style: const TextStyle(
+                                color: Color.fromARGB(255, 0, 0, 0),
+                              ),
                               enableSuggestions: false,
                               autocorrect: false,
                               textCapitalization: TextCapitalization.none,
@@ -244,6 +250,9 @@ class _AuthScreenState extends State<AuthScreen> {
                                         .blue), // Highlight border on focus
                               ),
                             ),
+                            style: const TextStyle(
+                                color: Color.fromARGB(255, 0, 0, 0),
+                              ),
                             obscureText: true,
                             validator: (value) {
                               if (value == null || value.trim().length < 6) {
