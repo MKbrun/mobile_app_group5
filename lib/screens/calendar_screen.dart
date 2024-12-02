@@ -31,6 +31,21 @@ class _CalendarScreenState extends State<CalendarScreen> {
     if (currentUser == null) return;
 
     try {
+      // Fetch users to create a mapping of userId -> username
+      QuerySnapshot usersSnapshot = await firestore.collection('users').get();
+      Map<String, String> userIdToUsername = {};
+
+      for (var userDoc in usersSnapshot.docs) {
+        Map<String, dynamic>? userData =
+            userDoc.data() as Map<String, dynamic>?;
+        if (userData != null && userData.containsKey('username')) {
+          userIdToUsername[userDoc.id] = userData['username'];
+        } else {
+          userIdToUsername[userDoc.id] = "Unknown";
+        }
+      }
+
+      // Fetch shifts assigned to the current user
       QuerySnapshot snapshot = await firestore
           .collection('shifts')
           .where('assignedUserId', isEqualTo: currentUser!.uid)
@@ -45,6 +60,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
           if (shiftMap[dateOnly] == null) {
             shiftMap[dateOnly] = [];
           }
+
+          String? assignedUserId = doc['assignedUserId'] as String?;
+          String assignedUsername = "Unassigned";
+
+          if (assignedUserId != null && assignedUserId.isNotEmpty) {
+            assignedUsername = userIdToUsername[assignedUserId] ?? "Unknown";
+          }
+
           shiftMap[dateOnly]!.add({
             "id": doc.id,
             "date": dateOnly,
@@ -54,7 +77,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
             "endTime": (doc['endTime'] != null)
                 ? (doc['endTime'] as Timestamp).toDate()
                 : null,
-            "assignedUserId": doc['assignedUserId'],
+            "assignedUserId": assignedUserId,
+            "assignedUsername": assignedUsername, // Assign the username here
             "title": doc['title'] ?? "No Title",
           });
         }
@@ -172,6 +196,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       _onShiftTapped(shift), // Updated to call _onShiftTapped
                   child: SmallShiftCardWidget(
                     shift: shift,
+                    currentUserId: currentUser!.uid, // Pass currentUserId
                   ),
                 );
               },

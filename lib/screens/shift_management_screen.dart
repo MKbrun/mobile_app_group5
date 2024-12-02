@@ -2,10 +2,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mobile_app_group5/widgets/date_picker_widget.dart';
+import 'package:mobile_app_group5/widgets/shift_card_widget.dart';
 import 'package:mobile_app_group5/widgets/shift_list_widget.dart';
 import 'package:mobile_app_group5/widgets/add_shift_dialog.dart';
 import 'package:mobile_app_group5/widgets/swap_approval_dialog.dart';
 import 'package:mobile_app_group5/widgets/swap_shift_dialog.dart';
+import 'package:mobile_app_group5/themes/app_theme.dart';
 import 'package:collection/collection.dart';
 
 class ShiftManagementScreen extends StatefulWidget {
