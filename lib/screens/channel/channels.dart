@@ -85,13 +85,16 @@ class _ChannelScreenState extends State<ChannelScreen> {
 
     await showDialog(
       context: context,
+      barrierColor: Colors.transparent,
       builder: (dialogContext) {
         return AlertDialog(
+          backgroundColor: Colors.white,
           title: const Text('Create Channel'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
+                style: const TextStyle(color: Colors.black),
                 controller: nameController,
                 decoration: const InputDecoration(labelText: 'Channel Name'),
               ),
@@ -183,79 +186,86 @@ class _ChannelScreenState extends State<ChannelScreen> {
   }
 
   @override
-Widget build(BuildContext context) {
-  return Scaffold(
-    appBar: AppBar(
-      title: const Text(
-        'Channels',
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 22,
-          color: Colors.white, // White text for contrast
-        ),
-      ),
-      centerTitle: true,
-      backgroundColor: AppTheme.blueColor, // Main theme for AppBar
-      elevation: 0,
-    ),
-    body: isLoading
-        ? const Center(child: CircularProgressIndicator())
-        : Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: ListView.builder(
-              itemCount: channels.length,
-              itemBuilder: (context, index) {
-                final channel = channels[index];
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 10),
-                  decoration: BoxDecoration(
-                    color: AppTheme.blueColor.withOpacity(0.8), // Slightly darker shade
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    title: Text(
-                      channel['channelName'],
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white, // White text for readability
-                      ),
-                    ),
-                    trailing: IconButton(
-                      icon: const Icon(
-                        Icons.info_outline,
-                        color: Colors.white,
-                      ),
-                      onPressed: () => navigateToChannelInfo(channel),
-                    ),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ChannelMessagesScreen(
-                            channelId: channel['channelId'],
-                            channelName: channel['channelName'],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                );
-              },
-            ),
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'Channels',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 22,
+            color: Colors.white,
           ),
-    floatingActionButton: userRole == 'admin'
-        ? FloatingActionButton.extended(
-            onPressed: createChannelDialog,
-            icon: const Icon(Icons.add, color: Colors.white),
-            label: const Text('Create'),
-            backgroundColor: AppTheme.lightGreenColor, // Light green for differentiation
-          )
-        : null,
-  );
-}
+        ),
+        centerTitle: true,
+        backgroundColor: AppTheme.blueColor,
+        elevation: 0,
+      ),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: ListView.builder(
+                itemCount: channels.length,
+                itemBuilder: (context, index) {
+                  final channel = channels[index];
+                  final backgroundColor = index % 2 == 0
+                      ? AppTheme.blueColor
+                      : AppTheme.blueColor.withOpacity(0.7);
+
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    decoration: BoxDecoration(
+                      color: backgroundColor,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      title: Text(
+                        channel['channelName'],
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      trailing: IconButton(
+                        icon: const Icon(
+                          Icons.info_outline,
+                          color: Colors.white,
+                        ),
+                        onPressed: () => navigateToChannelInfo(channel),
+                      ),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ChannelMessagesScreen(
+                              channelId: channel['channelId'],
+                              channelName: channel['channelName'],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                },
+              ),
+            ),
+      floatingActionButton: userRole == 'admin'
+          ? FloatingActionButton.extended(
+              onPressed: createChannelDialog,
+              icon: const Icon(Icons.add, color: Colors.white),
+              label: const Text(
+                'Create',
+                style: TextStyle(color: Colors.white),
+              ),
+              backgroundColor: AppTheme.blueColor,
+            )
+          : null,
+    );
+  }
 }

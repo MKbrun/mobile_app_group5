@@ -221,7 +221,7 @@ Widget build(BuildContext context) {
           child: ElevatedButton(
             onPressed: deleteChannel,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
+              backgroundColor: Colors.red.withOpacity(0.8),
               foregroundColor: Colors.white,
             ),
             child: const Text('Delete Channel'),
@@ -265,7 +265,7 @@ Widget build(BuildContext context) {
                   trailing: IconButton(
                     icon: Icon(
                       isMember ? Icons.remove_circle : Icons.add_circle,
-                      color: isMember ? Colors.red : AppTheme.lightGreenColor,
+                      color: isMember ? Colors.red.withOpacity(0.8) : AppTheme.lightGreenColor,
                     ),
                     onPressed: () => isMember
                         ? removeMember(user['email'])

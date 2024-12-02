@@ -103,9 +103,8 @@ class _ContactsScreenState extends State<ContactsScreen> {
       ),
       body: Column(
         children: [
-          Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
@@ -115,7 +114,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
                   borderSide: BorderSide.none,
                 ),
                 filled: true,
-                fillColor: Colors.grey[200],
+                fillColor: AppTheme.lightGreenColor.withOpacity(0.1),
                 prefixIcon: const Icon(Icons.search, color: Colors.grey),
               ),
               onChanged: (value) {
@@ -148,23 +147,34 @@ class _ContactsScreenState extends State<ContactsScreen> {
                     final lastMessage = contact['lastMessage'];
 
                     final backgroundColor =
-                        index % 2 == 0 ? Theme.of(context).colorScheme.tertiary : Theme.of(context).colorScheme.tertiaryContainer;
+                        index % 2 == 0 ? AppTheme.blueColor : AppTheme.blueColor.withOpacity(0.7);
 
                     return Container(
-                      color: backgroundColor,
+                      margin: const EdgeInsets.only(bottom: 10, left: 10, right: 10),
+                      decoration: BoxDecoration(
+                        color: backgroundColor,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                       child: ListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
                         leading: CircleAvatar(
                           backgroundImage:
                               imageUrl != null ? NetworkImage(imageUrl) : null,
-                          onBackgroundImageError: imageUrl != null
-                              ? (exception, stackTrace) {
-                                  print('Error loading image: $exception');
-                                }
+                          backgroundColor: AppTheme.blueColor,
+                          child: imageUrl == null
+                              ? const Icon(Icons.person, color: Colors.white)
                               : null,
                         ),
                         title: Text(
                           username,
-                          style: const TextStyle(fontSize: 20),
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
                         ),
                         subtitle:
                             lastMessage != null && lastMessage['text'] != null
@@ -172,11 +182,11 @@ class _ContactsScreenState extends State<ContactsScreen> {
                                     lastMessage['text'],
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(color: Colors.grey),
+                                    style: const TextStyle(color: Colors.white70),
                                   )
                                 : const Text(
                                     'No messages yet.',
-                                    style: TextStyle(color: Colors.grey),
+                                    style: TextStyle(color: Colors.white70),
                                   ),
                         onTap: () {
                           if (userId != null && username != null) {

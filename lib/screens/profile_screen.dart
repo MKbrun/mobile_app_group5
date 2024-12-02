@@ -54,12 +54,13 @@ class ProfileScreen extends StatelessWidget {
         title: const Text(
           'Profile',
           style: TextStyle(
+            color: Colors.white,
             fontWeight: FontWeight.bold,
             fontSize: 22,
           ),
         ),
         centerTitle: true,
-        backgroundColor: Theme.of(context).colorScheme.secondary,
+        backgroundColor: AppTheme.blueColor,
         elevation: 0,
       ),
       body: FutureBuilder<Map<String, dynamic>>(
@@ -148,7 +149,7 @@ class ProfileScreen extends StatelessWidget {
                           await _logout(context);
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
+                          backgroundColor: Colors.red.withOpacity(0.8),
                           fixedSize: const Size(150, 50),
                         ),
                         child: const Text('Logout'),

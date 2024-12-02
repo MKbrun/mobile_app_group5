@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 
 class AppTheme {
   // Static Colors
-  static const Color blueColor = Color(0xFF7097BC);
+  static const Color blueColor = Color.fromARGB(255, 46, 112, 174);
   static const Color lightGreenColor = Color(0xFFA6CF98);
   static const Color darkBlueColor = Color.fromARGB(255, 81, 125, 167);
-  static const Color redColor = Colors.red;
+  static Color redColor = Colors.red.withOpacity(0.9);
   static const Color White = Color.fromARGB(255, 242, 244, 247);
 
   // Light Theme
@@ -53,9 +53,9 @@ class AppTheme {
   // Private Theme Configurations for Light
   static const AppBarTheme _lightAppBarTheme = AppBarTheme(
     backgroundColor: Color.fromARGB(255, 242, 244, 247),
-    iconTheme: IconThemeData(color: Colors.black),
+    iconTheme: IconThemeData(color: Colors.white),
     titleTextStyle: TextStyle(
-      color: Colors.black,
+      color: Colors.white,
       fontSize: 20,
       fontWeight: FontWeight.bold,
     ),
@@ -133,6 +133,9 @@ class AppTheme {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
       ),
+      textStyle: TextStyle(
+        color: Colors.white,
+      )
     ),
   );
 
@@ -148,5 +151,8 @@ class AppTheme {
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(8),
     ),
+    textStyle: TextStyle(
+        color: Colors.white,
+      )
   );
 }
