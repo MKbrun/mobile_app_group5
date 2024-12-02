@@ -16,125 +16,20 @@ class CalendarScreen extends StatefulWidget {
 class _CalendarScreenState extends State<CalendarScreen> {
   final FirebaseFirestore firestore = FirebaseFirestore.instance;
   final User? currentUser = FirebaseAuth.instance.currentUser;
-  Map<DateTime, List<Map<String, dynamic>>> _shiftEvents = {};
+
   DateTime _selectedDate = DateTime.now();
-  List<Map<String, dynamic>> _shiftsForSelectedDate = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchShifts();
-  }
-
-  // Fetch all shifts for the current user
-  void _fetchShifts() async {
-    if (currentUser == null) return;
-
-    try {
-      // Fetch users to create a mapping of userId -> username
-      QuerySnapshot usersSnapshot = await firestore.collection('users').get();
-      Map<String, String> userIdToUsername = {};
-
-      for (var userDoc in usersSnapshot.docs) {
-        Map<String, dynamic>? userData =
-            userDoc.data() as Map<String, dynamic>?;
-        if (userData != null && userData.containsKey('username')) {
-          userIdToUsername[userDoc.id] = userData['username'];
-        } else {
-          userIdToUsername[userDoc.id] = "Unknown";
-        }
-      }
-
-      // Fetch shifts assigned to the current user
-      QuerySnapshot snapshot = await firestore
-          .collection('shifts')
-          .where('assignedUserId', isEqualTo: currentUser!.uid)
-          .get();
-
-      Map<DateTime, List<Map<String, dynamic>>> shiftMap = {};
-      for (var doc in snapshot.docs) {
-        if (doc['date'] != null) {
-          DateTime shiftDate = (doc['date'] as Timestamp).toDate();
-          DateTime dateOnly =
-              DateTime(shiftDate.year, shiftDate.month, shiftDate.day);
-          if (shiftMap[dateOnly] == null) {
-            shiftMap[dateOnly] = [];
-          }
-
-          String? assignedUserId = doc['assignedUserId'] as String?;
-          String assignedUsername = "Unassigned";
-
-          if (assignedUserId != null && assignedUserId.isNotEmpty) {
-            assignedUsername = userIdToUsername[assignedUserId] ?? "Unknown";
-          }
-
-          shiftMap[dateOnly]!.add({
-            "id": doc.id,
-            "date": dateOnly,
-            "startTime": (doc['startTime'] != null)
-                ? (doc['startTime'] as Timestamp).toDate()
-                : null,
-            "endTime": (doc['endTime'] != null)
-                ? (doc['endTime'] as Timestamp).toDate()
-                : null,
-            "assignedUserId": assignedUserId,
-            "assignedUsername": assignedUsername, // Assign the username here
-            "title": doc['title'] ?? "No Title",
-          });
-        }
-      }
-      setState(() {
-        _shiftEvents = shiftMap;
-        _fetchShiftsForMonth(_selectedDate);
-      });
-    } catch (e) {
-      print('Error fetching shifts: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error fetching shifts: $e')),
-      );
-    }
-  }
-
-  // Fetch all shifts for the selected month
-  void _fetchShiftsForMonth(DateTime date) {
-    DateTime firstDayOfMonth = DateTime(date.year, date.month, 1);
-    DateTime lastDayOfMonth = DateTime(date.year, date.month + 1, 0);
-
-    List<Map<String, dynamic>> allShifts = [];
-    _shiftEvents.forEach((date, shifts) {
-      if (date.isAfter(firstDayOfMonth.subtract(Duration(days: 1))) &&
-          date.isBefore(lastDayOfMonth.add(Duration(days: 1)))) {
-        allShifts.addAll(shifts);
-      }
-    });
-
-    setState(() {
-      _selectedDate = date;
-      _shiftsForSelectedDate = allShifts;
-    });
-  }
 
   // Navigate to ShiftManagementScreen when a date is selected
   void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
-    _fetchShiftsForMonth(selectedDay);
+    setState(() {
+      _selectedDate = selectedDay;
+    });
 
     // Navigate to ShiftManagementScreen for the selected day
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => ShiftManagementScreen(selectedDate: selectedDay),
-      ),
-    );
-  }
-
-  // Navigate to ShiftManagementScreen when a shift is tapped
-  void _onShiftTapped(Map<String, dynamic> shift) {
-    DateTime shiftDate = shift['date'];
-
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ShiftManagementScreen(selectedDate: shiftDate),
       ),
     );
   }
@@ -164,7 +59,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
               firstDay: DateTime.utc(2020, 01, 01),
               lastDay: DateTime.utc(2025, 12, 31),
               calendarFormat: CalendarFormat.month,
-              eventLoader: (date) => _shiftEvents[date] ?? [],
               onDaySelected: (selectedDay, focusedDay) {
                 _onDaySelected(selectedDay, focusedDay);
               },
@@ -187,22 +81,86 @@ class _CalendarScreenState extends State<CalendarScreen> {
           ),
           const SizedBox(height: 20), // Adds some margin below the divider
           Expanded(
-            child: ListView.builder(
-              itemCount: _shiftsForSelectedDate.length,
-              itemBuilder: (context, index) {
-                final shift = _shiftsForSelectedDate[index];
-                return GestureDetector(
-                  onTap: () =>
-                      _onShiftTapped(shift), // Updated to call _onShiftTapped
-                  child: SmallShiftCardWidget(
-                    shift: shift,
-                    currentUserId: currentUser!.uid, // Pass currentUserId
-                  ),
+            child: StreamBuilder<QuerySnapshot>(
+              stream: firestore
+                  .collection('shifts')
+                  .where('assignedUserId', isEqualTo: currentUser!.uid)
+                  .snapshots(), // Fetch all shifts for the current user
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                }
+
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return const Center(
+                      child:
+                          Text('No shifts available for the selected month.'));
+                }
+
+                // Filter shifts locally for the selected month
+                List<Map<String, dynamic>> shifts = snapshot.data!.docs
+                    .map((doc) {
+                      DateTime shiftDate = (doc['date'] as Timestamp).toDate();
+                      if (shiftDate.year == _selectedDate.year &&
+                          shiftDate.month == _selectedDate.month) {
+                        String assignedUserId = doc['assignedUserId'] ?? '';
+                        return {
+                          "id": doc.id,
+                          "date": shiftDate,
+                          "startTime": (doc['startTime'] != null)
+                              ? (doc['startTime'] as Timestamp).toDate()
+                              : null,
+                          "endTime": (doc['endTime'] != null)
+                              ? (doc['endTime'] as Timestamp).toDate()
+                              : null,
+                          "assignedUserId": assignedUserId,
+                          "title": doc['title'] ?? "No Title",
+                        };
+                      }
+                      return null;
+                    })
+                    .where((shift) => shift != null)
+                    .toList()
+                    .cast<Map<String, dynamic>>();
+
+                if (shifts.isEmpty) {
+                  return const Center(
+                      child:
+                          Text('No shifts available for the selected month.'));
+                }
+
+                return ListView.builder(
+                  itemCount: shifts.length,
+                  itemBuilder: (context, index) {
+                    final shift = shifts[index];
+                    return GestureDetector(
+                      onTap: () => _onShiftTapped(shift),
+                      child: SmallShiftCardWidget(
+                        shift: shift,
+                        currentUserId: currentUser!.uid,
+                      ),
+                    );
+                  },
                 );
               },
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // Navigate to ShiftManagementScreen when a shift is tapped
+  void _onShiftTapped(Map<String, dynamic> shift) {
+    DateTime shiftDate = shift['date'];
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ShiftManagementScreen(selectedDate: shiftDate),
       ),
     );
   }
