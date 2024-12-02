@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AddShiftDialog extends StatefulWidget {
   @override
@@ -10,6 +11,38 @@ class _AddShiftDialogState extends State<AddShiftDialog> {
   TimeOfDay? startTime;
   TimeOfDay? endTime;
   String selectedUser = "Unassigned";
+  TextEditingController _titleController = TextEditingController();
+  List<Map<String, dynamic>> users = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUsers();
+  }
+
+  // Fetch users from Firestore and handle missing fields
+  void _fetchUsers() async {
+    try {
+      QuerySnapshot snapshot =
+          await FirebaseFirestore.instance.collection('users').get();
+      setState(() {
+        users = snapshot.docs.map((doc) {
+          final data = doc.data()
+              as Map<String, dynamic>?; // Casting to Map<String, dynamic>?
+          return {
+            "id": doc.id,
+            "username": data != null && data.containsKey('username')
+                ? data['username']
+                : 'Unknown',
+          };
+        }).toList();
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching users: $e')),
+      );
+    }
+  }
 
   // Function to format TimeOfDay to 24-hour HH:mm format
   String _formatTimeOfDay(TimeOfDay? time) {
@@ -127,6 +160,11 @@ class _AddShiftDialogState extends State<AddShiftDialog> {
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          // Shift Title
+          TextField(
+            controller: _titleController,
+            decoration: InputDecoration(labelText: "Shift Title"),
+          ),
           // Start Time Picker
           ListTile(
             title: const Text("Start Time"),
@@ -145,17 +183,26 @@ class _AddShiftDialogState extends State<AddShiftDialog> {
             ),
             onTap: () => _showCupertinoTimePicker(context, false),
           ),
-          // Dropdown for Assigning User (Not pressable now, just for display)
+          // Dropdown for Assigning User
           DropdownButton<String>(
             value: selectedUser,
-            items: <String>['Unassigned', 'Alice', 'Bob', 'Charlie']
-                .map((String value) {
-              return DropdownMenuItem<String>(
-                value: value,
-                child: Text(value),
-              );
-            }).toList(),
-            onChanged: null, // Disable interaction for now
+            items: [
+              const DropdownMenuItem<String>(
+                value: "Unassigned",
+                child: Text("Unassigned"),
+              ),
+              ...users.map((user) {
+                return DropdownMenuItem<String>(
+                  value: user["id"],
+                  child: Text(user["username"]),
+                );
+              }).toList(),
+            ],
+            onChanged: (String? newValue) {
+              setState(() {
+                selectedUser = newValue ?? "Unassigned";
+              });
+            },
           ),
         ],
       ),
@@ -170,18 +217,17 @@ class _AddShiftDialogState extends State<AddShiftDialog> {
           child: const Text("Add Shift"),
           onPressed: () {
             if (startTime != null && endTime != null) {
-              // Calculate duration
-              final startInMinutes = startTime!.hour * 60 + startTime!.minute;
-              final endInMinutes = endTime!.hour * 60 + endTime!.minute;
-              final durationInHours =
-                  ((endInMinutes - startInMinutes) / 60).toStringAsFixed(1);
-
               // Create new shift data
               Map<String, dynamic> newShift = {
-                "time":
-                    "${_formatTimeOfDay(startTime)} - ${_formatTimeOfDay(endTime)} (${durationInHours} hrs)",
-                "available": true,
-                "user": selectedUser,
+                "date": DateTime
+                    .now(), // This should be updated to the selected date from widget
+                "startTime": Timestamp.fromDate(DateTime.now().add(Duration(
+                    hours: startTime!.hour, minutes: startTime!.minute))),
+                "endTime": Timestamp.fromDate(DateTime.now().add(
+                    Duration(hours: endTime!.hour, minutes: endTime!.minute))),
+                "assignedUserId":
+                    selectedUser == "Unassigned" ? "" : selectedUser,
+                "title": _titleController.text.trim(),
               };
               Navigator.of(context).pop(newShift);
             } else {
