@@ -112,9 +112,7 @@ This projects is a group effort, and each team member contributed to different a
   It was also useful for understanding the firestore database rules, setup and correct usage of the features firebase had to offer.
   When we had an issue adding a new feature we could ask ChatGpt which solutions were relevant for our feature and how to best implement it.
 
-  It also helped research tools we could use. For example the use of Mockito for testing, allowing us to test backend features that needed to communicate with a database. Co-Pilot and ChatGPT would sometimes     
-  propose outdated solutions, so only relying on AI is still not viable. Especially when asking about complex features, the AI would get confused and not awnser the question correctly. Stack Overflow is still a 
-  great tool to examine human made code which relates to what you're working on.
+  It also helped research tools we could use. For example the use of Mockito for testing, allowing us to test backend features that needed to communicate with a database. Co-Pilot and ChatGPT would sometimes propose outdated solutions, so only relying on AI is still not viable. Especially when asking about complex features, the AI would get confused and not awnser the question correctly. Stack Overflow is still a great tool to examine human made code which relates to what you're working on.
 - **CoPilot**: Helped alot during debugging with its autocompletion feature and its ability to answer question regarding specific files and segments of the code.
 
 ## Additional Information
