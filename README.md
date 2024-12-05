@@ -105,8 +105,11 @@ This projects is a group effort, and each team member contributed to different a
 - **Firebase**: Backend services for authentication, database and storage
 - **Mockito**: Used to mock firebase backend for testing
 - **Android studio**: Testing the app in a virtual device
-- **ChatGPT**: Helped research and debug the code
-- **CoPilot**: Helped alot during debugging
+- **ChatGPT**: Helped research and debug the code.
+  When error messages appeared after making changes, ChatGpt was useful for debugging what went wrong and how to fix it.
+  It was also useful for understanding the firestore database rules, setup and correct usage of the features firebase has to offer.
+  When we had an issue adding a new feature we could ask ChatGpt which solutions were relevant for our feature and how to best implement it.
+- **CoPilot**: Helped alot during debugging with its autocompletion feature and its ability to answer question regarding specific files and segments of the code.
 
 ## Additional Information
 
