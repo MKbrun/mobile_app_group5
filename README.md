@@ -29,8 +29,7 @@ Welcome to our mobile app project! This app is built for effective communication
 
  ### 😂 Profile
  - See profile information, such as profile picture, username and email.
- - See settings
-     -Change theme
+ - Change theme of application
  - Logout
 
 ---
@@ -59,6 +58,7 @@ Welcome to our mobile app project! This app is built for effective communication
 | **Private Chats**     | Chat privately with other users, view contact lists, and see last message previews. |
 | **Calendar**          | A shared calendar for important dates.                                         |
 | **Shift Management**  | Admins can manage shifts, and users can claim available ones.                  |
+| **Profile**           | A way to see details, log out or change the applications theme from dark or light |
 
 ---
 
@@ -99,11 +99,27 @@ flutter run
 This projects is a group effort, and each team member contributed to different aspects of the application
 - **Design**: Created a user-friendly and intuative interface.
 - **Development**: Built frontend and backend logic for different parts of the app, making sure to integrate the Firebase services
+- **Managment**: Made sure we were on schedule and deliverd what we needed.
 
 ## 🔗 Technologies Used
-- **Flutter**: Framework for building the app
-- **Firebase**: Backend services for authentication, database and storage
-- **Mockito**: Used to mock firebase backend for testing
-- **Android studio**: Testing the app in a virtual device
-- **ChatGPT**: Helped research and debug the code
-- **CoPilot**: Helped alot during debugging
+- **Flutter**: Framework for building the app allowing the app to run on a range of devices.
+- **Firebase**: Backend services for authentication, database and storage. Firebase had all the utility we needed including dynamic storage for easy expansion of channels, chats and users.
+- **Mockito**: Used to mock firebase backend for testing purposes. This was a vital part to debug the channel's backend functionality, which took some time to implement correcly with the Firestore Database.
+- **Android studio**: Testing the app in a virtual device. The ability to wipe the data and setup new devices on command was really helpfull. An example where we needed this was testing the stored data logic. It 
+  would log directly in to the app if the devives had previously logged in to the app.
+- **ChatGPT**: Helped research and debug the code.
+  When error messages appeared after making changes, ChatGpt was useful for debugging what went wrong and how to fix it.
+  It was also useful for understanding the firestore database rules, setup and correct usage of the features firebase had to offer.
+  When we had an issue adding a new feature we could ask ChatGpt which solutions were relevant for our feature and how to best implement it.
+
+  It also helped research tools we could use. For example the use of Mockito for testing, allowing us to test backend features that needed to communicate with a database. Co-Pilot and ChatGPT would sometimes propose outdated solutions, so only relying on AI is still not viable. Especially when asking about complex features, the AI would get confused and not awnser the question correctly. Stack Overflow is still a great tool to examine human made code which relates to what you're working on.
+- **CoPilot**: Helped alot during debugging with its autocompletion feature and its ability to answer question regarding specific files and segments of the code.
+
+## Additional Information
+
+For more detailed information, please refer to the [Wiki](https://github.com/MKbrun/mobile_app_group5/wiki).
+
+* Class Diagram: [Read Wiki](https://github.com/MKbrun/mobile_app_group5/wiki/Class-diagram)
+* Team Meetings: [Read Wiki](https://github.com/MKbrun/mobile_app_group5/wiki/Team-meetings)
+* User Stories: [Read Wiki](https://github.com/MKbrun/mobile_app_group5/wiki/User-Stories)
+* Wireframes: [Read Wiki](https://github.com/MKbrun/mobile_app_group5/wiki/Wireframe)
